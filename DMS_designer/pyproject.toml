@@ -1,0 +1,79 @@
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "DMS_designer"
+dynamic = ["version"]
+description = "Deep Mutational Scanning Library Design and Analysis Toolkit"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "John Desmarais", email = "desmara@cshl.edu"}
+]
+maintainers = [
+    {name = "John Desmarais", email = "desmara@cshl.edu"}
+]
+keywords = [
+    "deep mutational scanning",
+    "protein mutagenesis", 
+    "oligonucleotide library",
+    "bioinformatics",
+    "protein engineering",
+    "DMS",
+    "mutagenesis",
+    "library design"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Scientific/Engineering :: Chemistry",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Operating System :: OS Independent",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "numpy>=1.20.0",
+    "pandas>=1.3.0",
+    "matplotlib>=3.3.0",
+    "seaborn>=0.11.0",
+    "scipy>=1.7.0",
+    "logomaker>=0.8.0",
+    "openpyxl>=3.0.0",
+    "tqdm>=4.60.0",
+    "biopython>=1.79.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "sphinx>=4.0.0",
+    "sphinx-rtd-theme>=0.5.0",
+]
+jupyter = [
+    "jupyter>=1.0.0",
+    "ipykernel>=6.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/jackdesmarais/DMS_Designer"
+Documentation = "https://github.com/jackdesmarais/DMS_Designer#readme"
+Repository = "https://github.com/jackdesmarais/DMS_Designer"
+"Bug Tracker" = "https://github.com/jackdesmarais/DMS_Designer/issues"
+
+[project.scripts]
+dms-maker = "DMS_designer.library_maker:main"
+
+[tool.setuptools]
+packages = ["DMS_designer"]
+
+[tool.setuptools.package-data]
+DMS_designer = ["codon_usage.xlsx"]
+
+[tool.setuptools.dynamic]
+version = {attr = "DMS_designer.__version__"} 

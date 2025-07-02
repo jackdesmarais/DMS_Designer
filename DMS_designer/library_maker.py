@@ -1044,27 +1044,27 @@ class LibraryMaker():
         self.orf_df = orf_df
     
 
-if __name__ == '__main__':
+def main():
     """
-    Command-line interface for LibraryMaker.
+    Main function for command-line interface.
     
-    This script provides a command-line interface for creating mutagenesis
+    This function provides the command-line interface for creating mutagenesis
     libraries. It can be used to generate libraries from either nucleotide
     or amino acid sequences.
     
     Examples
     --------
     # Create library from nucleotide sequence
-    python library_maker.py -w ATGGCCGAA -s True -d equal -l even_single_and_double_nt_library
+    dms-maker -w ATGGCCGAA -s True -d equal -l even_single_and_double_nt_library
     
     # Create library from amino acid sequence  
-    python library_maker.py -w MKEL -a -s True -d 100 -l even_single_and_double_aa_library
+    dms-maker -w MKEL -a -s True -d 100 -l even_single_and_double_aa_library
     
     # Create library with custom parameters
-    python library_maker.py -w ATGGCCGAA -s True -d max:10000 -n 5 -t 50 -l single_and_more_doubles_nt_library
+    dms-maker -w ATGGCCGAA -s True -d max:10000 -n 5 -t 50 -l single_and_more_doubles_nt_library
 
     # Create library with focused mutations
-    python library_maker.py -w ATGGCCGAA -s True -d max:10000 -f 1 3 5 -c singles -p 3 -e 0.5 -l single_and_more_doubles_with_all_focused_mutations_nt_library
+    dms-maker -w ATGGCCGAA -s True -d max:10000 -f 1 3 5 -c singles -p 3 -e 0.5 -l single_and_more_doubles_with_all_focused_mutations_nt_library
     """
     from argparse import ArgumentParser
     desc = """
@@ -1083,7 +1083,7 @@ if __name__ == '__main__':
     """
     
     parser = ArgumentParser(
-                        prog='library_maker',
+                        prog='dms-maker',
                         description=desc,
                         epilog='For more information, see the LibraryMaker class documentation.')
 
@@ -1153,6 +1153,9 @@ if __name__ == '__main__':
                  seed=args.seed,
                  fig_width=args.fig_width, 
                  context=args.context)
-    
+
+
+if __name__ == '__main__':
+    main()
     
         
