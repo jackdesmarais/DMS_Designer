@@ -8,9 +8,8 @@ import statsmodels.api as sm
 import seaborn as sns
 from scipy.stats import pearsonr,gaussian_kde, barnard_exact
 
-from math import ceil
 from copy import copy
-
+import pickle
 # sns.set_context('talk')
 
 def count_over_thresh(x, threshold=0):
@@ -139,21 +138,27 @@ def depth_plot(xs,labels,title='Library depth'):
     plt.title(title)
     return(fig_read, fig_frac)
 
-def make_ROC(true_class, metrics, labels, make_plots, plot_thresh=False):
+def make_ROC(true_class, metrics, labels, make_plots, plot_hist=False, 
+             plot_thresh=False, verbose=False, sorting=False):
     if make_plots:
         print('Number of true positives: %s'%sum(true_class))
         fig_roc, ax1 = plt.subplots()
-        fig_roc_thresh, ax2 = plt.subplots()
         fig3_PRC, ax3 = plt.subplots()
-        fig4_PRC_Thresh, ax4 = plt.subplots()
-        hist_figs, hist_axes = zip(*[plt.subplots() for i in range(len(metrics))])
+
+        if plot_thresh:
+            fig_roc_thresh, ax2 = plt.subplots()
+            fig4_PRC_Thresh, ax4 = plt.subplots()
+        
+        if plot_hist:
+            hist_figs, hist_axes = zip(*[plt.subplots() for i in range(len(metrics))])
     aucs = {}
     for i, (metric, label) in enumerate(zip(metrics,labels)):
         nan_mask = np.logical_not(np.isnan(metric))
         metric = metric[nan_mask]
         metric_classes = true_class[nan_mask]
         if make_plots:
-            hist_ax = hist_axes[i]
+            if plot_hist:
+                hist_ax = hist_axes[i]
             plt.sca(ax1)
         mask = np.argsort(metric)
         decision_curve = metric_classes[mask]
@@ -175,9 +180,9 @@ def make_ROC(true_class, metrics, labels, make_plots, plot_thresh=False):
             if plot_thresh:
                 plt.plot(fpr, tpr, label='%s Thresh AUC: %.2f'%(label, np.trapz(tpr,fpr)))
 
-            plt.sca(ax2)
-            plt.plot(thresholds, tpr, label='%s True positive rate'%label)
-            plt.plot(thresholds, fpr, label='%s False positive rate'%label)
+                plt.sca(ax2)
+                plt.plot(thresholds, tpr, label='%s True positive rate'%label)
+                plt.plot(thresholds, fpr, label='%s False positive rate'%label)
 
             roc = np.subtract(tpr,fpr)
             t = thresholds[roc == np.nanmax(roc)]
@@ -185,27 +190,27 @@ def make_ROC(true_class, metrics, labels, make_plots, plot_thresh=False):
             tmin = min(t)
             tmax = max(t)
 
-            print('%s The optimal threshold range is from %s to %s'%(label, tmin, tmax))
-            print('The ROCs at specific thresholds are- opt min: %s, opt max: %s'%(roc[thresholds==tmin],
-                                                                                   roc[thresholds==tmax]))
+            if verbose:
+                print('%s The optimal threshold range is from %s to %s'%(label, tmin, tmax))
+                print('The ROCs at specific thresholds are- opt min: %s, opt max: %s'%(roc[thresholds==tmin],
+                                                                                    roc[thresholds==tmax]))
 
-            print('The TPRs at specific thresholds are- opt min: %s, opt max: %s'%(tpr[thresholds==tmin],
-                                                                                   tpr[thresholds==tmax]))
+                print('The TPRs at specific thresholds are- opt min: %s, opt max: %s'%(tpr[thresholds==tmin],
+                                                                                    tpr[thresholds==tmax]))
 
-            print('The FPRs at specific thresholds are- opt min: %s, opt max: %s'%(fpr[thresholds==tmin],
-                                                                                   fpr[thresholds==tmax]))
-            plt.sca(hist_ax)
-            edges = np.histogram_bin_edges(metric,bins="auto")
-            sns.histplot(metric, label = 'full distribution', 
-                         bins=edges, kde=True)
-            sns.histplot(metric[metric_classes], color='green', 
-                         label = 'Sense mutants', bins=edges, kde=True)
-            sns.histplot(metric[np.logical_not(metric_classes)], 
-                         color='orange', label = 'Nonsense mutants', bins=edges, kde=True)
+                print('The FPRs at specific thresholds are- opt min: %s, opt max: %s'%(fpr[thresholds==tmin],
+                                                                                    fpr[thresholds==tmax]))
+                
+            if plot_hist:
+                plt.sca(hist_ax)
+                edges = np.histogram_bin_edges(metric,bins="auto")
+                sns.histplot(metric, label = 'full distribution', 
+                            bins=edges, kde=True)
+                sns.histplot(metric[metric_classes], color='green', 
+                            label = 'Sense mutants', bins=edges, kde=True)
+                sns.histplot(metric[np.logical_not(metric_classes)], 
+                            color='orange', label = 'Nonsense mutants', bins=edges, kde=True)
 
-            plt.sca(ax2) 
-
-            plt.sca(ax3)
         decision_curve = metric_classes[mask]
         tpr = np.cumsum(np.flip(decision_curve))/sum(metric_classes)
         precision = np.divide(np.cumsum(np.flip(decision_curve)), [i+1 for i in range(len(decision_curve))])
@@ -213,48 +218,59 @@ def make_ROC(true_class, metrics, labels, make_plots, plot_thresh=False):
         aucs[label+' PRC-AUC'] = auc
         
         if make_plots:
-            plt.plot(tpr, precision, label='%s Sorting AUC: %.2f'%(label, auc))
-
-            tpr = np.array([sum(metric_classes[metric>=t])/sum(metric_classes) for t in thresholds])
-            precision = np.array([sum(metric_classes[metric>=t])/sum(metric>=t) for t in thresholds])
-            plt.plot(tpr, precision, label='%s Threshold AUC: %.2f'%(label, np.trapz(precision, tpr)))
-
-            plt.sca(ax4)
-            plt.plot(thresholds, tpr, label='%s True positive rate'%label)
-            plt.plot(thresholds, precision, label='%s Precision'%label)
-
-            f_score = np.divide(np.multiply(np.multiply(tpr,precision),2),np.add(tpr,precision))
-            ft = thresholds[f_score == np.nanmax(f_score)]
-            
-            gm = np.sqrt(np.multiply(tpr,precision))
-            gt = thresholds[gm == np.nanmax(gm)]
-            
-            
-            tmin = min(t)
-            tmax = max(t)
-
-            
-            plt.sca(hist_ax)
-            tmin = min(ft)
-            tmax = max(ft)
-            print('The optimal f-score threshold range is from %s to %s'%(tmin, tmax))
-            
-            tmin = min(gt)
-            tmax = max(gt)
-            print('The optimal g-mean threshold range is from %s to %s'%(tmin, tmax))
-                
-            plt.title(label)
-            plt.legend()
-
-            plt.sca(ax4)
-            if tmin == tmax:
-                plt.axvline(tmin, c= 'r', alpha=0.5, label='optimal PRC thresh')
-            elif tmin < tmax:
-                plt.axvspan(tmin, tmax, facecolor='r', alpha=0.5, label='optimal PRC thresh')
+            plt.sca(ax3)
+            if plot_thresh:
+                plt.plot(tpr, precision, label='%s Sorting AUC: %.2f'%(label, auc))
             else:
-                print('roc thresh error')
+                plt.plot(tpr, precision, label='%s AUC: %.2f'%(label, auc))
+            if plot_thresh or verbose:
+                tpr = np.array([sum(metric_classes[metric>=t])/sum(metric_classes) for t in thresholds])
+                precision = np.array([sum(metric_classes[metric>=t])/sum(metric>=t) for t in thresholds])
+            if plot_thresh:
+                plt.plot(tpr, precision, label='%s Threshold AUC: %.2f'%(label, np.trapz(precision, tpr)))
+
+                plt.sca(ax4)
+                plt.plot(thresholds, tpr, label='%s True positive rate'%label)
+                plt.plot(thresholds, precision, label='%s Precision'%label)
+
+            if verbose:
+                f_score = np.divide(np.multiply(np.multiply(tpr,precision),2),np.add(tpr,precision))
+                ft = thresholds[f_score == np.nanmax(f_score)]
+                
+                gm = np.sqrt(np.multiply(tpr,precision))
+                gt = thresholds[gm == np.nanmax(gm)]
+                
+                
+                tmin = min(t)
+                tmax = max(t)
+
+                
+                
+                tmin = min(ft)
+                tmax = max(ft)
+                print('The optimal f-score threshold range is from %s to %s'%(tmin, tmax))
+                
+                tmin = min(gt)
+                tmax = max(gt)
+                print('The optimal g-mean threshold range is from %s to %s'%(tmin, tmax))
+
+                plt.sca(ax4)
+                if tmin == tmax:
+                    plt.axvline(tmin, c= 'r', alpha=0.5, label='optimal PRC thresh')
+                elif tmin < tmax:
+                    plt.axvspan(tmin, tmax, facecolor='r', alpha=0.5, label='optimal PRC thresh')
+                else:
+                    print('roc thresh error')
+
+            if plot_hist:
+                plt.sca(hist_ax)
+                plt.title(label)
+                plt.legend()
+
+            
     
     if make_plots:
+        figs = []
         print()
         print('Aggregate stats')
         plt.sca(ax1)
@@ -262,26 +278,36 @@ def make_ROC(true_class, metrics, labels, make_plots, plot_thresh=False):
         plt.ylabel('True positive rate',fontsize=22)
         plt.title('ROC',fontsize=22)
         plt.legend(loc='lower right', title='Area under the curve')
-
-        plt.sca(ax2)
-        plt.xlabel('Threshold',fontsize=22)
-        plt.ylabel('Rate',fontsize=22)
-        plt.title('ROC',fontsize=22)
-        plt.legend(loc='upper right')
-
+        figs.append(fig_roc)
+        if plot_thresh:
+            plt.sca(ax2)
+            plt.xlabel('Threshold',fontsize=22)
+            plt.ylabel('Rate',fontsize=22)
+            plt.title('ROC',fontsize=22)
+            plt.legend(loc='upper right')
+            figs.append(fig_roc_thresh)
+        else:
+            figs.append(None)
         plt.sca(ax3)
         plt.ylabel('Precision',fontsize=22)
         plt.xlabel('Recall',fontsize=22)
         plt.title('PRC',fontsize=22)
         plt.legend(loc='lower left', title='Area under the curve')
-
-        plt.sca(ax4)
-        plt.xlabel('Threshold',fontsize=22)
-        plt.ylabel('Rate',fontsize=22)
-        plt.title('PRC',fontsize=22)
-        plt.legend(loc='lower left')
-        
-        return(aucs, fig_roc, fig_roc_thresh, fig3_PRC, fig4_PRC_Thresh, hist_figs)
+        figs.append(fig3_PRC)
+        if plot_thresh:
+            plt.sca(ax4)
+            plt.xlabel('Threshold',fontsize=22)
+            plt.ylabel('Rate',fontsize=22)
+            plt.title('PRC',fontsize=22)
+            plt.legend(loc='lower left')
+            figs.append(fig4_PRC_Thresh)
+        else:
+            figs.append(None)
+        if plot_hist:
+            figs.extend(hist_figs)
+        else:
+            figs.append(None)
+        return(aucs, *figs)
 
     return(aucs)
     
@@ -299,6 +325,13 @@ class Library():
         self.alphabet = alphabet
         self.WT_seq = WT_seq
         self.fitness_measure = fitness_measure
+
+    def save(self, file_path):
+        pickle.dump(self, open(file_path, 'wb'))
+
+    @classmethod
+    def load(cls, file_path):
+        return(pickle.load(open(file_path, 'rb')))
 
     @classmethod
     def build_from_reads(cls, data_file, replicates, id_cols, group_cols, rate_method, alphabet, WT_seq, process_call, name_regex, sheet_name=None):
@@ -356,11 +389,11 @@ class Library():
 
         dest_df = library_dest.data_df.copy()
         wt_mask = dest_df[('meta',position_col)]==''
-        dest_df[('meta',position_col)][~wt_mask] = dest_df[('meta',position_col)][~wt_mask].astype(int)+dest_position_shift
+        dest_df.loc[~wt_mask,('meta',position_col)] = dest_df.loc[~wt_mask,('meta',position_col)].astype(int)+dest_position_shift
 
         source_df = library_source.data_df.copy()
         wt_mask = source_df[('meta',position_col)]==''
-        source_df[('meta',position_col)][~wt_mask] = source_df[('meta',position_col)][~wt_mask].astype(int)+source_position_shift
+        source_df.loc[~wt_mask,('meta',position_col)] = source_df.loc[~wt_mask,('meta',position_col)].astype(int)+source_position_shift
 
         merged_df = pd.concat([dest_df,source_df],ignore_index=True).sort_index(axis=1)
         lib_merged = cls(merged_df, merged_replicates, merged_id_cols, merged_group_cols, merged_rate_method, merged_alphabet, new_WT, merged_fitness_measure)
@@ -441,7 +474,8 @@ class Library():
             
         return(fig_read, fig_frac)
     
-    def check_controls(self, control_col, positive_vals, negative_vals, sns_context='notebook', rc_params={}, plt_type='strip'):
+    def check_controls(self, control_col, positive_vals, negative_vals, sns_context='notebook', rc_params={}, plt_type='strip',
+                       plot_thresh=False, verbose=False, plot_hist=False):
 
 
         control_mask = self.data_df[('meta', control_col)].isin(positive_vals+negative_vals)
@@ -503,7 +537,7 @@ class Library():
             aucs, fig_roc, fig_roc_thresh, fig3_PRC, fig4_PRC_Thresh, hist_figs = make_ROC((control_labels=='+').values, 
                                                     [to_plot[col].values for col in to_plot.columns]+[to_plot.mean(axis=1).values], 
                                                     [col for col in to_plot.columns]+[self.fitness_measure+' averaged across reps'], 
-                                                    True)
+                                                    True, plot_thresh=plot_thresh, verbose=verbose, plot_hist=plot_hist)
     
         return(replicates_cat_p, averaged_cat_p, fig_roc, fig_roc_thresh, fig3_PRC, fig4_PRC_Thresh, hist_figs)
     
