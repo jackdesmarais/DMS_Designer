@@ -42,7 +42,8 @@ import itertools
 from math import comb
 import seaborn as sns
 
-codon_df = pd.read_excel('codon_usage.xlsx')
+from importlib import resources
+codon_df = pd.read_excel(resources.files('DMS_designer') / 'codon_usage.xlsx')
 codon_df.set_index('codon', inplace=True)
 
 amino_acids = np.array([aa for aa in codon_df['aa'].unique()])
@@ -55,7 +56,7 @@ for aa in codon_df['aa'].unique():
     codons = codon_df.index[ix].values
     aa_to_codon_dict[aa] = codons
     
-def aa_to_codon(aa, rng=None):
+def aa_to_codon(aa, aa_to_codon_dict=aa_to_codon_dict, rng=None):
     """
     Convert an amino acid to a codon according to intrinsic probabilities.
     
@@ -63,6 +64,8 @@ def aa_to_codon(aa, rng=None):
     ----------
     aa : str
         Single amino acid character to convert to codon
+    aa_to_codon_dict : dict, optional
+        Dictionary mapping amino acids to their codons. If None, uses the default codon usage table.
     rng : numpy.random.Generator, optional
         Random number generator instance. If None, creates a new default generator.
         
@@ -87,7 +90,7 @@ def aa_to_codon(aa, rng=None):
     codon = rng.choice(a=aa_to_codon_dict[aa], size=1)[0]
     return(codon)
 
-def protein_to_orf(protein, rng=None):
+def protein_to_orf(protein, rng=None, aa_to_codon_dict=aa_to_codon_dict):
     """
     Convert a protein sequence to an open reading frame using codon usage table.
     
@@ -97,6 +100,8 @@ def protein_to_orf(protein, rng=None):
         Protein sequence as a string of amino acid characters
     rng : numpy.random.Generator, optional
         Random number generator instance. If None, creates a new default generator.
+    aa_to_codon_dict : dict, optional
+        Dictionary mapping amino acids to their codons. If None, uses the default codon usage table.
         
     Returns
     -------
@@ -111,9 +116,9 @@ def protein_to_orf(protein, rng=None):
     """
     if rng is None:
         rng = np.random.default_rng()
-    return(''.join([aa_to_codon(aa,rng=rng) for aa in protein]))
+    return(''.join([aa_to_codon(aa,rng=rng, aa_to_codon_dict=aa_to_codon_dict) for aa in protein]))
 
-def orf_to_protein(orf):
+def orf_to_protein(orf, codon_df=codon_df):
     """
     Convert an open reading frame to a protein sequence.
     
@@ -121,6 +126,8 @@ def orf_to_protein(orf):
     ----------
     orf : str
         Nucleotide sequence to translate. Must be a multiple of 3.
+    codon_df : pd.DataFrame, optional
+        DataFrame containing codon usage information. If None, uses the default codon usage table.
         
     Returns
     -------
@@ -491,12 +498,12 @@ class LibraryMaker():
     ...                   focus_to_make='all')
     """
     def __init__(self, wt_nt, single_mutants = True, doubles_to_make = 'equal', name='Mutant_lib',
-                 var_num = 3, wt_num = 100, max_tries = 100,
+                 var_num = 3, wt_num = 100, max_tries = 100, stop_num=None,
                  focus_positions = [], focus_to_make=0, focus_mutants_per=3, focus_mutants_per_spread=0,focus_mutants_per_min=0,focus_mutants_per_max=0,
                 upstream_dna = 'ATGGAAAGTGTCCCAGGAGACTACAGC',
                  downstream_dna = 'CAGACAAGTAACTCAAGACTTAATGGC',
-                out_path = './', seed=None,
-                fig_width=8, context='talk'):
+                out_path = './', seed=None, codon_df=codon_df, aa_to_codon_dict=aa_to_codon_dict,
+                fig_width=8, context='talk', fig_path=None):
         """
         This class creates oligo libraries for mutagenesis studies of protein function
 
@@ -521,6 +528,9 @@ class LibraryMaker():
                 The number of different synsonymous nt vatriants to be made for the WT sequence
             max_tries : int default 100
                 The number of times to retry making a random mutant or variant if an already existing sequence was created
+            stop_num : int default None
+                The number of different synonymous nt variants to be made for each nonsense variant, 
+                if None, default to var_num
             focus_positions : list default []
                 Amino acid positions of AAs to be mutated in greater depth
             focus_to_make : int, float, or {'singles', 'doubles', 'singles_doubles', 'all'} default 0
@@ -549,12 +559,18 @@ class LibraryMaker():
                 This is the downstream adaptor sequence to append to the 3' end of oligos
             out_path : string default './'
                 path to place output files. This directory must already exist
+            codon_df : pd.DataFrame, optional
+                DataFrame containing codon usage information. If None, uses the default codon usage table.
+            aa_to_codon_dict : dict, optional
+                Dictionary mapping amino acids to their codons. If None, uses the default codon usage table.
             seed : int Default None
                 Random seed. Set to ensure reproducibility.
             fig_width : int default 8
                 Size parameter for output figures
             context : {'talk', 'paper', 'notebook', 'poster'} default 'talk'
                 Used to set plotting configuration. passed to seaborn.set_context
+            fig_path : str, default None
+                Path to save the output figures. If default to out_path.
         """
         
         start = datetime.now()
@@ -565,16 +581,24 @@ class LibraryMaker():
         self.rng = np.random.default_rng(seed=seed)
         
         self.wt_nt = wt_nt
-        self.wt_protein = orf_to_protein(wt_nt)
+        self.wt_protein = orf_to_protein(wt_nt, codon_df=codon_df)
         self.L = len(self.wt_protein)
         self.variant_dict = {'0pt_WT':self.wt_protein}
         
         self.out_path = out_path
+        if fig_path is None:
+            self.fig_path = out_path
+        else:
+            self.fig_path = fig_path
         
         self.var_num = var_num
         self.wt_num = wt_num
         self.max_tries = max_tries
-        
+        if stop_num is None:
+            self.stop_num = var_num
+        else:
+            self.stop_num = stop_num
+
         self.upstream_dna = upstream_dna
         self.downstream_dna = downstream_dna
 
@@ -637,7 +661,7 @@ class LibraryMaker():
 
         
         print('Making nt seqs')
-        self.total_seqs = len(self.generate_nt_seqs())
+        self.total_seqs = len(self.generate_nt_seqs(aa_to_codon_dict=aa_to_codon_dict))
         print('%d nt seqs made\n%f sec elapsed\n'%(self.total_seqs,(datetime.now()-start).total_seconds()))
         
         self.save_file()
@@ -645,7 +669,7 @@ class LibraryMaker():
         print('------------------------------------------------')
         print()
         print()
-        summarize_file(self.file_name, out_path=self.out_path, fig_width=fig_width, context=context)
+        summarize_file(self.file_name, out_path=self.fig_path, fig_width=fig_width, context=context)
         print('Output checked\n%f sec elapsed'%((datetime.now()-start).total_seconds()))
         
     def create_focused_singles(self):
@@ -940,13 +964,18 @@ class LibraryMaker():
         return(double_variant_dict)
     
     
-    def generate_nt_seqs(self):
+    def generate_nt_seqs(self, aa_to_codon_dict=aa_to_codon_dict):
         """
         Generate synonymous nucleotide sequences for all protein variants.
         
         Creates multiple synonymous nucleotide sequences for each protein variant
         using the codon usage table. The number of variants depends on whether
         it's the wild-type (wt_num variants) or a mutant (var_num variants).
+
+        Parameters
+        ----------
+        aa_to_codon_dict : dict, optional
+            Dictionary mapping amino acids to their codons. If None, uses the default codon usage table.
         
         Returns
         -------
@@ -984,6 +1013,8 @@ class LibraryMaker():
             t = 0
             if protein_name == '0pt_WT':
                 K = self.wt_num
+            elif '*' in protein_name:
+                K = self.stop_num
             else:
                 K = self.var_num
             while k < K:
@@ -992,7 +1023,7 @@ class LibraryMaker():
                 if (protein_name == '0pt_WT')&(k==0):
                     orf_seq = self.wt_nt
                 else:
-                    orf_seq = protein_to_orf(protein_seq, rng=self.rng)
+                    orf_seq = protein_to_orf(protein_seq, rng=self.rng, aa_to_codon_dict=aa_to_codon_dict)
 
                 # Add if not already in dictionary
                 if orf_seq not in self.orf_dict.values():
