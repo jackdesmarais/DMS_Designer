@@ -1,13 +1,13 @@
 # DMS Designer
 
-A comprehensive toolkit for designing and analyzing deep mutational scanning (DMS) libraries.
+A toolkit for designing and analyzing deep mutational scanning (DMS) libraries. Associated with the paper Alpsoy, Ipsaro, Skopelitis, et al. Structural Basis of DNA-Dependent Coactivator Recruitment by the Tuft Cell Master Regulator POU2F3.
 
 ## Overview
 
-This repository contains tools for creating oligonucleotide libraries for protein mutagenesis studies, including:
+This repository contains tools for creating libraries of oligonucleotides for protein mutagenesis studies as well as tools for analyzing the results of such studies, including:
 
 - **Library Maker**: Generate comprehensive mutagenesis libraries with single and multiple amino acid mutants
-- **Library Analysis**: Analyze and visualize DMS library composition and results
+- **Library Analysis**: Analyze and visualize mutagenesis library results
 
 ## Modules
 
@@ -22,10 +22,16 @@ The `Library_maker` module provides functionality to create oligonucleotide libr
 ### Library Analysis  
 The `library_analysis` module provides tools for analyzing DMS library results, including:
 
-- Library composition analysis
-- Variant distribution visualization
-- Statistical analysis of mutation patterns
-- Integration with MAVE-NN for deep learning analysis
+- Creation of quality control plots
+   - Measuring library composition and skew
+   - Comparing replicates
+   - Assessing selection at time point 0
+- library scale correction
+   - Replicate scale correction for merging
+   - Cross library scale correction for merging
+- Variant fitness calculation and plotting
+   - Create variant effect scores from library counts
+   - Create single mutant variant effect heatmaps
 
 ## Installation
 
