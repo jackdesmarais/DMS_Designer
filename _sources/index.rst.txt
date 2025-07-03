@@ -1,9 +1,9 @@
-.. Library Analyzer documentation master file
+.. DMS Designer documentation master file
 
-Welcome to Library Analyzer's documentation!
-============================================
+Welcome to DMS Designer's documentation!
+========================================
 
-.. include:: ../../readme.md
+.. include:: ../../README.md
    :parser: myst_parser.sphinx_
 
 Examples

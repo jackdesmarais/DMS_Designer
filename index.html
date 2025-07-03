@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Welcome to Library Analyzer’s documentation! &mdash; DMS Designer v0.1 documentation</title>
+  <title>Welcome to DMS Designer’s documentation! &mdash; DMS Designer v0.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
 
@@ -67,7 +67,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Welcome to Library Analyzer’s documentation!</li>
+      <li class="breadcrumb-item active">Welcome to DMS Designer’s documentation!</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -77,8 +77,95 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="welcome-to-library-analyzer-s-documentation">
-<h1>Welcome to Library Analyzer’s documentation!<a class="headerlink" href="#welcome-to-library-analyzer-s-documentation" title="Permalink to this heading"></a></h1>
+  <section id="welcome-to-dms-designer-s-documentation">
+<h1>Welcome to DMS Designer’s documentation!<a class="headerlink" href="#welcome-to-dms-designer-s-documentation" title="Permalink to this heading"></a></h1>
+<section class="tex2jax_ignore mathjax_ignore" id="dms-designer">
+<h2>DMS Designer<a class="headerlink" href="#dms-designer" title="Permalink to this heading"></a></h2>
+<p>A toolkit for designing and analyzing deep mutational scanning (DMS) libraries. Associated with the paper Alpsoy, Ipsaro, Skopelitis, et al. Structural Basis of DNA-Dependent Coactivator Recruitment by the Tuft Cell Master Regulator POU2F3.</p>
+<section id="overview">
+<h3>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h3>
+<p>This repository contains tools for creating libraries of oligonucleotides for protein mutagenesis studies as well as tools for analyzing the results of such studies, including:</p>
+<ul class="simple">
+<li><p><strong>Library Maker</strong>: Generate comprehensive mutagenesis libraries with single and multiple amino acid mutants</p></li>
+<li><p><strong>Library Analysis</strong>: Analyze and visualize mutagenesis library results</p></li>
+</ul>
+</section>
+<section id="modules">
+<h3>Modules<a class="headerlink" href="#modules" title="Permalink to this heading"></a></h3>
+<section id="library-maker">
+<h4>Library Maker<a class="headerlink" href="#library-maker" title="Permalink to this heading"></a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">Library_maker</span></code> module provides functionality to create oligonucleotide libraries for deep mutational scanning experiments. It includes:</p>
+<ul class="simple">
+<li><p>Single and multiple amino acid mutant generation</p></li>
+<li><p>Synonymous nucleotide variant creation using codon usage tables</p></li>
+<li><p>Focused mutagenesis at specific positions</p></li>
+<li><p>Comprehensive library analysis and visualization</p></li>
+</ul>
+</section>
+<section id="library-analysis">
+<h4>Library Analysis<a class="headerlink" href="#library-analysis" title="Permalink to this heading"></a></h4>
+<p>The <code class="docutils literal notranslate"><span class="pre">library_analysis</span></code> module provides tools for analyzing DMS library results, including:</p>
+<ul class="simple">
+<li><p>Creation of quality control plots</p>
+<ul>
+<li><p>Measuring library composition and skew</p></li>
+<li><p>Comparing replicates</p></li>
+<li><p>Assessing selection at time point 0</p></li>
+</ul>
+</li>
+<li><p>library scale correction</p>
+<ul>
+<li><p>Replicate scale correction for merging</p></li>
+<li><p>Cross library scale correction for merging</p></li>
+</ul>
+</li>
+<li><p>Variant fitness calculation and plotting</p>
+<ul>
+<li><p>Create variant effect scores from library counts</p></li>
+<li><p>Create single mutant variant effect heatmaps</p></li>
+</ul>
+</li>
+</ul>
+</section>
+</section>
+<section id="installation">
+<h3>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h3>
+<ol class="arabic">
+<li><p>Clone this repository</p></li>
+<li><p>Install dependencies using the provided environment files:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>env.yml
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+<section id="usage">
+<h3>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h3>
+<section id="creating-a-library">
+<h4>Creating a Library<a class="headerlink" href="#creating-a-library" title="Permalink to this heading"></a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">Library_maker.library_maker</span><span class="w"> </span><span class="kn">import</span> <span class="n">LibraryMaker</span>
+
+<span class="c1"># Create a simple library with single mutants</span>
+<span class="n">lm</span> <span class="o">=</span> <span class="n">LibraryMaker</span><span class="p">(</span><span class="s2">&quot;ATGGCCGAA&quot;</span><span class="p">,</span> <span class="n">single_mutants</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">doubles_to_make</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="analyzing-a-library">
+<h4>Analyzing a Library<a class="headerlink" href="#analyzing-a-library" title="Permalink to this heading"></a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">library_analysis.library_analyzer</span><span class="w"> </span><span class="kn">import</span> <span class="n">LibraryAnalyzer</span>
+
+<span class="c1"># Analyze library composition</span>
+<span class="n">analyzer</span> <span class="o">=</span> <span class="n">LibraryAnalyzer</span><span class="p">(</span><span class="s2">&quot;library_file.csv&quot;</span><span class="p">)</span>
+<span class="n">analyzer</span><span class="o">.</span><span class="n">generate_summary_plots</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="documentation">
+<h3>Documentation<a class="headerlink" href="#documentation" title="Permalink to this heading"></a></h3>
+<p>For detailed documentation, see https://jackdesmarais.github.io/DMS_Designer/</p>
+</section>
+</section>
 </section>
 <section id="examples">
 <h1>Examples<a class="headerlink" href="#examples" title="Permalink to this heading"></a></h1>
