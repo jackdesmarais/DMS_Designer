@@ -75,9 +75,13 @@ setup(
         "biopython>=1.79.0",
     ],
     extras_require={
-        "dev": [
-            "sphinx>=4.0.0",
-            "sphinx-rtd-theme>=0.5.0",
+        "docs": [
+            "sphinx==5.0.2",
+            "sphinx_rtd_theme",
+            "myst-parser",
+            "nbsphinx",  # For rendering Jupyter notebooks
+            "pandoc", # For rendering Jupyter notebooks
+            "ipython",   # Required by nbsphinx
         ],
         "jupyter": [
             "jupyter>=1.0.0",

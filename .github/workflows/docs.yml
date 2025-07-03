@@ -1,0 +1,65 @@
+name: Build and Deploy Docs
+
+on:
+  push:
+    branches:
+      - main  
+      - docs
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Conda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          python-version: '3.9'
+          channels: conda-forge,defaults
+          channel-priority: strict
+          activate-environment: docs-env
+          
+      - name: Install dependencies
+        shell: bash -l {0}
+        run: |
+          conda install -y pandoc
+          python -m pip install --upgrade pip
+          pip install -e ".[docs]"
+          pip freeze  # Debug: show all installed packages
+
+      - name: Setup documentation structure
+        shell: bash -l {0}
+        run: |
+          # Create notebooks directory in docs
+          mkdir -p docs/source/notebooks
+          # Copy notebooks
+          cp Generate_Figures/library_analysis/*.ipynb docs/source/notebooks/
+          cp Generate_Figures/library_production/*.ipynb docs/source/notebooks/
+          # Debug: List contents to verify
+          ls -la docs/source/notebooks/
+
+      - name: Build docs
+        shell: bash -l {0}
+        run: |
+          # Debug: Print current directory and its contents
+          pwd
+          ls -la
+          # Debug: Print Python path and try to import the package
+          python -c "import sys; print('Python path:', sys.path); import DMS_designer; print('Package location:', DMS_designer.__file__); from DMS_designer import Library; print('Library class location:', Library.__module__)"
+          cd docs
+          make clean
+          # Generate API documentation
+          sphinx-apidoc -f -o source ../DMS_designer/
+          make html SPHINXOPTS="-vv"  # More verbose output for debugging
+          # Debug: show the contents of the build directory
+          ls -R build/html
+          
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs/build/html 

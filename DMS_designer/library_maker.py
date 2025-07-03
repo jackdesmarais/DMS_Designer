@@ -683,7 +683,7 @@ class LibraryMaker():
         -------
         dict
             Dictionary mapping variant names to protein sequences for focused
-            single mutants. Names follow pattern '1pt_PPAA' where PP is the
+            single mutants. Names follow pattern 1pt_PPAA where PP is the
             position (01-indexed) and AA is the amino acid.
             
         Notes
@@ -714,7 +714,7 @@ class LibraryMaker():
         -------
         dict
             Dictionary mapping variant names to protein sequences for focused
-            double mutants. Names follow pattern '2pt_PP1AA1_PP2AA2' where PP
+            double mutants. Names follow pattern 2pt_PP1AA1_PP2AA2 where PP
             is the position (01-indexed) and AA is the amino acid.
             
         Notes
@@ -747,7 +747,7 @@ class LibraryMaker():
         -------
         dict
             Dictionary mapping variant names to protein sequences for all focused
-            mutant combinations. Names follow pattern 'Npt_PP1AA1_PP2AA2_...'
+            mutant combinations. Names follow pattern Npt_PP1AA1_PP2AA2_...
             where N is the number of mutations, PP is position (01-indexed),
             and AA is the amino acid.
             
@@ -789,7 +789,7 @@ class LibraryMaker():
         -------
         dict
             Dictionary mapping variant names to protein sequences for random
-            focused mutant combinations. Names follow pattern 'Npt_PP1AA1_PP2AA2_...'
+            focused mutant combinations. Names follow pattern Npt_PP1AA1_PP2AA2_...
             where N is the number of mutations, PP is position (01-indexed),
             and AA is the amino acid.
             
@@ -881,7 +881,7 @@ class LibraryMaker():
         -------
         dict
             Dictionary mapping variant names to protein sequences for single
-            mutants. Names follow pattern '1pt_PPAA' where PP is the position
+            mutants. Names follow pattern 1pt_PPAA where PP is the position
             (01-indexed) and AA is the amino acid.
             
         Notes
@@ -915,7 +915,7 @@ class LibraryMaker():
         -------
         dict
             Dictionary mapping variant names to protein sequences for random
-            double mutants. Names follow pattern '2pt_PP1AA1_PP2AA2' where PP
+            double mutants. Names follow pattern 2pt_PP1AA1_PP2AA2 where PP
             is the position (01-indexed) and AA is the amino acid.
             
         Notes
@@ -981,7 +981,7 @@ class LibraryMaker():
         -------
         dict
             Dictionary mapping variant names to nucleotide sequences.
-            Names follow pattern 'PROTEIN_NAME_vN' where N is the variant number.
+            Names follow pattern PROTEIN_NAME_vN where N is the variant number.
             
         Notes
         -----
