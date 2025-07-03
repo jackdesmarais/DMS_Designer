@@ -62,11 +62,4 @@ analyzer.generate_summary_plots()
 
 ## Documentation
 
-For detailed documentation, see the docstrings in the individual modules or run:
-```python
-help(LibraryMaker)
-```
-
-## License
-
-[Add your license information here] 
+For detailed documentation, see https://jackdesmarais.github.io/DMS_Designer/
