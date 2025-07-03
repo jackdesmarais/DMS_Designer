@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Running a full analysis of the OCA_T1 library &mdash; DMS Designer v0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="DMS_designer" href="../modules.html" />
+    <link rel="prev" title="Making variant effect heatmaps for the POU library" href="create_POU_heatmaps.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            DMS Designer
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Example Notebooks:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../notebooks.html">Example Notebooks</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../notebooks.html#library-production">Library production</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../notebooks.html#library-analysis">Library analysis</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="merge_POU_libraries.html">Mergeing the POU libraries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="run_POU_QC.html">Running the QC checks for the merged POU library</a></li>
+<li class="toctree-l3"><a class="reference internal" href="create_POU_heatmaps.html">Making variant effect heatmaps for the POU library</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Running a full analysis of the OCA_T1 library</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Importing-libraries">Importing libraries</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Defining-library-and-plotting-variables">Defining library and plotting variables</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Building-and-saving-a-copy-of-the-library">Building and saving a copy of the library</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Running-quality-control-tests-on-the-library">Running quality control tests on the library</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Creating-the-variant-effect-heatmap">Creating the variant effect heatmap</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">DMS_designer</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">DMS Designer</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../notebooks.html">Example Notebooks</a></li>
+      <li class="breadcrumb-item active">Running a full analysis of the OCA_T1 library</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/notebooks/OCA_T1_analysis.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This page was generated from a Jupyter notebook.
+<code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">the</span> <span class="pre">notebook</span></code></p>
+</div>
+<section id="Running-a-full-analysis-of-the-OCA_T1-library">
+<h1>Running a full analysis of the OCA_T1 library<a class="headerlink" href="#Running-a-full-analysis-of-the-OCA_T1-library" title="Permalink to this heading"></a></h1>
+<section id="Importing-libraries">
+<h2>Importing libraries<a class="headerlink" href="#Importing-libraries" title="Permalink to this heading"></a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">seaborn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sns</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.colors</span><span class="w"> </span><span class="kn">import</span> <span class="n">TwoSlopeNorm</span>
+
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">DMS_designer</span><span class="w"> </span><span class="kn">import</span> <span class="n">Library</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Defining-library-and-plotting-variables">
+<h2>Defining library and plotting variables<a class="headerlink" href="#Defining-library-and-plotting-variables" title="Permalink to this heading"></a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">replicates</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;rep1&#39;</span><span class="p">:[</span><span class="s1">&#39;Rep1 P0&#39;</span><span class="p">,</span><span class="s1">&#39;Rep1 P10&#39;</span><span class="p">],</span>
+              <span class="s1">&#39;rep2&#39;</span><span class="p">:[</span><span class="s1">&#39;Rep2 P0&#39;</span><span class="p">,</span><span class="s1">&#39;Rep2 P10&#39;</span><span class="p">]}</span>
+
+<span class="n">id_cols</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;annotation&#39;</span><span class="p">]</span>
+<span class="n">process_call</span> <span class="o">=</span> <span class="s1">&#39;annotation&#39;</span>
+<span class="n">mut_id_regex</span> <span class="o">=</span> <span class="s1">&#39;(?P&lt;Mut_num&gt;\d*)pt_(?P&lt;Position&gt;\d*)(?P&lt;AA&gt;[\w*]*)_v(?P&lt;Version&gt;\d*)&#39;</span>
+<span class="n">group_cols</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Position&#39;</span><span class="p">,</span><span class="s1">&#39;AA&#39;</span><span class="p">]</span>
+<span class="n">rate_method</span> <span class="o">=</span> <span class="s1">&#39;l2fc&#39;</span>
+
+<span class="n">data_file</span> <span class="o">=</span> <span class="s1">&#39;./library_count_data/OCA_T1.xlsx&#39;</span>
+<span class="n">sheet_name</span> <span class="o">=</span> <span class="s1">&#39;Sheet1&#39;</span>
+
+<span class="n">aa_keys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="s1">&#39;R,H,K,D,E,S,T,N,Q,A,V,I,L,M,F,Y,W,C,G,P,*&#39;</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">))</span>
+
+<span class="n">control_column</span> <span class="o">=</span> <span class="s1">&#39;AA&#39;</span>
+<span class="n">positive_values</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;WT&#39;</span><span class="p">]</span>
+<span class="n">negative_values</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;*&#39;</span><span class="p">]</span>
+
+<span class="n">wt_aa</span> <span class="o">=</span> <span class="s1">&#39;ESVPGDYSKRVYQGVRVKHTVKDLLAEKRSGQTSNSRLNGSVSSSQSPFVQ&#39;</span>
+
+<span class="c1"># colorscheme = &#39;RdBu&#39;</span>
+<span class="n">WT_color</span> <span class="o">=</span> <span class="s1">&#39;xkcd:violet&#39;</span>
+
+<span class="n">feature_sets</span><span class="o">=</span><span class="p">[</span>
+    <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span><span class="s1">&#39;Segment resolved&#39;</span><span class="p">,</span><span class="s1">&#39;positions&#39;</span><span class="p">:[</span><span class="mi">11</span><span class="p">,</span><span class="mi">12</span><span class="p">,</span><span class="mi">13</span><span class="p">,</span><span class="mi">14</span><span class="p">,</span><span class="mi">15</span><span class="p">,</span><span class="mi">16</span><span class="p">,</span><span class="mi">17</span><span class="p">,</span><span class="mi">18</span><span class="p">,</span><span class="mi">19</span><span class="p">,</span><span class="mi">20</span><span class="p">,</span><span class="mi">21</span><span class="p">,</span><span class="mi">22</span><span class="p">,</span><span class="mi">23</span><span class="p">,</span><span class="mi">24</span><span class="p">,</span><span class="mi">25</span><span class="p">,</span><span class="mi">26</span><span class="p">,</span><span class="mi">27</span><span class="p">,</span><span class="mi">28</span><span class="p">,</span><span class="mi">29</span><span class="p">,</span><span class="mi">30</span><span class="p">,</span><span class="mi">31</span><span class="p">,</span><span class="mi">32</span><span class="p">],</span> <span class="s1">&#39;color&#39;</span><span class="p">:</span><span class="s1">&#39;xkcd:red&#39;</span><span class="p">},</span>
+    <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span><span class="s1">&#39;DNA interface&#39;</span><span class="p">,</span><span class="s1">&#39;positions&#39;</span><span class="p">:[</span><span class="mi">12</span><span class="p">,</span><span class="mi">13</span><span class="p">,</span><span class="mi">14</span><span class="p">,</span><span class="mi">15</span><span class="p">,</span><span class="mi">16</span><span class="p">,</span><span class="mi">17</span><span class="p">,</span><span class="mi">18</span><span class="p">,</span><span class="mi">19</span><span class="p">],</span> <span class="s1">&#39;color&#39;</span><span class="p">:</span><span class="s1">&#39;xkcd:orchid&#39;</span><span class="p">},</span>
+     <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span><span class="s1">&#39;POU2F3 interface&#39;</span><span class="p">,</span><span class="s1">&#39;positions&#39;</span><span class="p">:[</span><span class="mi">12</span><span class="p">,</span><span class="mi">13</span><span class="p">,</span><span class="mi">14</span><span class="p">,</span><span class="mi">15</span><span class="p">,</span><span class="mi">16</span><span class="p">,</span><span class="mi">18</span><span class="p">,</span><span class="mi">19</span><span class="p">,</span><span class="mi">20</span><span class="p">,</span><span class="mi">21</span><span class="p">,</span><span class="mi">22</span><span class="p">,</span><span class="mi">23</span><span class="p">,</span><span class="mi">25</span><span class="p">,</span><span class="mi">26</span><span class="p">,</span><span class="mi">29</span><span class="p">,</span><span class="mi">30</span><span class="p">],</span> <span class="s1">&#39;color&#39;</span><span class="p">:</span><span class="s1">&#39;xkcd:green&#39;</span><span class="p">},</span>
+<span class="p">]</span>
+
+<span class="n">sunset_cmap</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">blend_palette</span><span class="p">([</span><span class="s2">&quot;#5767FE&quot;</span><span class="p">,</span> <span class="s1">&#39;#918AF3&#39;</span><span class="p">,</span><span class="s1">&#39;#D9D6DA&#39;</span> <span class="p">,</span> <span class="s2">&quot;#FFFFCC&quot;</span><span class="p">,</span> <span class="s1">&#39;#FED9A4&#39;</span> <span class="p">,</span><span class="s2">&quot;#FFB077&quot;</span><span class="p">,</span> <span class="s1">&#39;#FF0000&#39;</span><span class="p">],</span><span class="n">as_cmap</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">to_red_cmap</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">blend_palette</span><span class="p">([</span><span class="s1">&#39;#990000&#39;</span><span class="p">,</span><span class="s1">&#39;#FF0000&#39;</span><span class="p">,</span><span class="s1">&#39;#FF6666&#39;</span><span class="p">,</span><span class="s1">&#39;#FFCCCC&#39;</span><span class="p">,</span> <span class="s1">&#39;xkcd:white&#39;</span><span class="p">][::</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="n">as_cmap</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Building-and-saving-a-copy-of-the-library">
+<h2>Building and saving a copy of the library<a class="headerlink" href="#Building-and-saving-a-copy-of-the-library" title="Permalink to this heading"></a></h2>
+<p>This calculates variant effect scores from a counts matirx</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">lib</span> <span class="o">=</span> <span class="n">Library</span><span class="o">.</span><span class="n">build_from_reads</span><span class="p">(</span><span class="n">data_file</span><span class="p">,</span> <span class="n">replicates</span><span class="p">,</span> <span class="n">id_cols</span><span class="p">,</span> <span class="n">group_cols</span><span class="p">,</span> <span class="n">rate_method</span><span class="p">,</span> <span class="n">aa_keys</span><span class="p">,</span> <span class="n">wt_aa</span><span class="p">,</span> <span class="n">process_call</span><span class="p">,</span> <span class="n">mut_id_regex</span><span class="p">,</span> <span class="n">sheet_name</span><span class="o">=</span><span class="n">sheet_name</span><span class="p">)</span>
+
+<span class="n">lib</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;./output/libraries/OCA_T1.pkl&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Running-quality-control-tests-on-the-library">
+<h2>Running quality control tests on the library<a class="headerlink" href="#Running-quality-control-tests-on-the-library" title="Permalink to this heading"></a></h2>
+<section id="Assessing-the-counts-associated-with-each-libbrary-member">
+<h3>Assessing the counts associated with each libbrary member<a class="headerlink" href="#Assessing-the-counts-associated-with-each-libbrary-member" title="Permalink to this heading"></a></h3>
+<p>The vast majority of library members have very simmilar count numbers, but there is one library member that forms a large outlier.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sns</span><span class="o">.</span><span class="n">set_palette</span><span class="p">(</span><span class="s1">&#39;colorblind&#39;</span><span class="p">)</span>
+
+<span class="n">fig_read</span><span class="p">,</span> <span class="n">fig_frac</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">check_barcode_distribution_depth</span><span class="p">()</span>
+
+<span class="n">leg</span> <span class="o">=</span> <span class="n">fig_read</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_legend</span><span class="p">()</span>
+<span class="n">leg</span><span class="o">.</span><span class="n">set_bbox_to_anchor</span><span class="p">((</span><span class="mf">0.6</span><span class="p">,</span><span class="mf">0.7</span><span class="p">))</span>
+
+<span class="n">leg</span> <span class="o">=</span> <span class="n">fig_frac</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_legend</span><span class="p">()</span>
+<span class="n">leg</span><span class="o">.</span><span class="n">set_bbox_to_anchor</span><span class="p">((</span><span class="mf">0.6</span><span class="p">,</span><span class="mf">0.7</span><span class="p">))</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_OCA_T1_analysis_9_0.png" src="../_images/notebooks_OCA_T1_analysis_9_0.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_OCA_T1_analysis_9_1.png" src="../_images/notebooks_OCA_T1_analysis_9_1.png" />
+</div>
+</div>
+<p>This also manifests when looking at the eveness of the read distribution by library members</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">check_barcode_distribution_skew</span><span class="p">()</span>
+
+<span class="n">leg</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_legend</span><span class="p">()</span>
+<span class="n">leg</span><span class="o">.</span><span class="n">set_bbox_to_anchor</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_OCA_T1_analysis_11_0.png" src="../_images/notebooks_OCA_T1_analysis_11_0.png" />
+</div>
+</div>
+</section>
+<section id="Assessing-the-counts-associated-with-each-variant">
+<h3>Assessing the counts associated with each variant<a class="headerlink" href="#Assessing-the-counts-associated-with-each-variant" title="Permalink to this heading"></a></h3>
+<p>When reads are averaged across library members to get the representation by variant, the distribution is much more even. However, you can see two variants that were highly selected in the Rep2 P10 condition, possibly escape mutants</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sns</span><span class="o">.</span><span class="n">set_palette</span><span class="p">(</span><span class="s1">&#39;colorblind&#39;</span><span class="p">)</span>
+
+<span class="n">fig_read</span><span class="p">,</span> <span class="n">fig_frac</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">check_depth</span><span class="p">()</span>
+
+
+<span class="n">leg</span> <span class="o">=</span> <span class="n">fig_read</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_legend</span><span class="p">()</span>
+<span class="n">leg</span><span class="o">.</span><span class="n">set_bbox_to_anchor</span><span class="p">((</span><span class="mf">0.6</span><span class="p">,</span><span class="mf">0.7</span><span class="p">))</span>
+
+<span class="n">leg</span> <span class="o">=</span> <span class="n">fig_frac</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_legend</span><span class="p">()</span>
+<span class="n">leg</span><span class="o">.</span><span class="n">set_bbox_to_anchor</span><span class="p">((</span><span class="mf">0.6</span><span class="p">,</span><span class="mf">0.7</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="c1"># plt.show()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_OCA_T1_analysis_13_0.png" src="../_images/notebooks_OCA_T1_analysis_13_0.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_OCA_T1_analysis_13_1.png" src="../_images/notebooks_OCA_T1_analysis_13_1.png" />
+</div>
+</div>
+<p>The low skew bbefore selection and higher skew after selection suggests that the library was effectively selected. And that the library had good representation before selection.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">check_skew</span><span class="p">()</span>
+
+<span class="n">leg</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_legend</span><span class="p">()</span>
+<span class="n">leg</span><span class="o">.</span><span class="n">set_bbox_to_anchor</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_OCA_T1_analysis_15_0.png" src="../_images/notebooks_OCA_T1_analysis_15_0.png" />
+</div>
+</div>
+</section>
+<section id="Evaluating-assay-dynamic-range">
+<h3>Evaluating assay dynamic range<a class="headerlink" href="#Evaluating-assay-dynamic-range" title="Permalink to this heading"></a></h3>
+<p>By looking at the seperation of the positive and negative controls in the assay, we can evaluate the dynamic range of the assay. In this assay, the positive and negative controls are a bit close, but still highly seperable, which means the assay is working.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">lib</span><span class="o">.</span><span class="n">check_controls</span><span class="p">(</span><span class="s1">&#39;AA&#39;</span><span class="p">,[</span><span class="s1">&#39;WT&#39;</span><span class="p">],[</span><span class="s1">&#39;*&#39;</span><span class="p">])</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Number of true positives: 800
+
+Aggregate stats
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_OCA_T1_analysis_17_1.png" src="../_images/notebooks_OCA_T1_analysis_17_1.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_OCA_T1_analysis_17_2.png" src="../_images/notebooks_OCA_T1_analysis_17_2.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_OCA_T1_analysis_17_3.png" src="../_images/notebooks_OCA_T1_analysis_17_3.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_OCA_T1_analysis_17_4.png" src="../_images/notebooks_OCA_T1_analysis_17_4.png" />
+</div>
+</div>
+</section>
+<section id="Checking-for-evidence-that-the-library-experience-selection-before-the-assay-began">
+<h3>Checking for evidence that the library experience selection before the assay began<a class="headerlink" href="#Checking-for-evidence-that-the-library-experience-selection-before-the-assay-began" title="Permalink to this heading"></a></h3>
+<p>There is no clear relationship between fitness values and initial abundances, suggesting that no preselection occured.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">lib</span><span class="o">.</span><span class="n">make_initial_skew_checks</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_OCA_T1_analysis_19_0.png" src="../_images/notebooks_OCA_T1_analysis_19_0.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_OCA_T1_analysis_19_1.png" src="../_images/notebooks_OCA_T1_analysis_19_1.png" />
+</div>
+</div>
+</section>
+<section id="Comparing-replicate-replicate-correspondence">
+<h3>Comparing replicate replicate correspondence<a class="headerlink" href="#Comparing-replicate-replicate-correspondence" title="Permalink to this heading"></a></h3>
+<p>Pearson correlations between variant effect scores are high giving us good confidence in the replicability of the assay. However replicate 2 scores are systematically lower than replicate 1 scores, this is likely dure to the two outliers that emerged in replicate 2 P10.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">lib</span><span class="o">.</span><span class="n">make_replicate_checks</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_OCA_T1_analysis_21_0.png" src="../_images/notebooks_OCA_T1_analysis_21_0.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_OCA_T1_analysis_21_1.png" src="../_images/notebooks_OCA_T1_analysis_21_1.png" />
+</div>
+</div>
+</section>
+</section>
+<section id="Creating-the-variant-effect-heatmap">
+<h2>Creating the variant effect heatmap<a class="headerlink" href="#Creating-the-variant-effect-heatmap" title="Permalink to this heading"></a></h2>
+<p>Variant effect scores relative to wild type are plotted as a heatmap and displayed with information about protein structure.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># This cell makes a colormap with the colormap max and min at the actual max and min of the data, this avoids oversaturating data at the edges but mutes subtle/weak effects a bit</span>
+
+<span class="n">plot_features</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">plot_mutability</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">plot_properties</span> <span class="o">=</span> <span class="kc">False</span>
+
+<span class="n">dead_thresh</span> <span class="o">=</span>  <span class="o">-</span><span class="mf">0.75</span>
+
+<span class="n">fits</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">total_average_frame</span>
+<span class="n">wts</span> <span class="o">=</span> <span class="n">fits</span><span class="p">[</span><span class="s1">&#39;AA&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">([</span><span class="s1">&#39;WT&#39;</span><span class="p">])</span>
+<span class="n">fits</span><span class="p">[</span><span class="s1">&#39;l2fc mean&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fits</span><span class="p">[</span><span class="s1">&#39;l2fc mean&#39;</span><span class="p">]</span><span class="o">-</span><span class="n">fits</span><span class="p">[</span><span class="n">wts</span><span class="p">][</span><span class="s1">&#39;l2fc mean&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+<span class="n">norm</span> <span class="o">=</span> <span class="n">TwoSlopeNorm</span><span class="p">(</span><span class="n">vcenter</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">fits</span><span class="p">[</span><span class="s1">&#39;l2fc mean&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="n">vmin</span><span class="o">=</span><span class="n">fits</span><span class="p">[</span><span class="s1">&#39;l2fc mean&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">())</span>
+
+<span class="n">heatmap_fig</span><span class="p">,</span> <span class="n">axd</span> <span class="o">=</span> <span class="n">lib</span><span class="o">.</span><span class="n">make_singles_heatmap</span><span class="p">(</span><span class="n">control_col</span><span class="o">=</span><span class="s1">&#39;AA&#39;</span><span class="p">,</span><span class="n">WT_vals</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;WT&#39;</span><span class="p">],</span><span class="n">stop_vals</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;*&#39;</span><span class="p">],</span> <span class="n">seq_start</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                                       <span class="n">rc_params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;figure.figsize&quot;</span> <span class="p">:</span> <span class="p">(</span><span class="mi">15</span><span class="p">,</span><span class="mi">7</span><span class="p">),</span> <span class="s1">&#39;figure.dpi&#39;</span><span class="p">:</span><span class="mi">1000</span><span class="p">},</span> <span class="n">grid</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">invert_mutability</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                       <span class="n">thresh</span><span class="o">=</span><span class="n">dead_thresh</span><span class="p">,</span><span class="n">feature_sets</span><span class="o">=</span><span class="n">feature_sets</span><span class="p">,</span> <span class="n">main_cmap</span><span class="o">=</span><span class="n">sunset_cmap</span><span class="p">,</span> <span class="n">mutability_cmap</span><span class="o">=</span><span class="n">to_red_cmap</span><span class="p">,</span>
+                                       <span class="n">plot_features</span><span class="o">=</span><span class="n">plot_features</span><span class="p">,</span> <span class="n">plot_mutability</span><span class="o">=</span><span class="n">plot_mutability</span><span class="p">,</span> <span class="n">plot_properties</span><span class="o">=</span><span class="n">plot_properties</span><span class="p">,</span>
+                                       <span class="n">norm</span><span class="o">=</span><span class="n">norm</span>
+                                       <span class="p">)</span>
+
+<span class="n">cbar_width</span> <span class="o">=</span> <span class="mf">0.0135</span>
+<span class="n">cbar_height</span> <span class="o">=</span> <span class="mf">0.25</span>
+<span class="n">cbar_left_shift</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.05</span>
+<span class="n">axd</span><span class="p">[</span><span class="s1">&#39;mutant_cmap&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="s1">&#39;linear&#39;</span><span class="p">)</span>
+<span class="n">cbar_pos</span> <span class="o">=</span> <span class="n">axd</span><span class="p">[</span><span class="s1">&#39;mutant_cmap&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">get_position</span><span class="p">()</span>
+<span class="n">axd</span><span class="p">[</span><span class="s1">&#39;mutant_cmap&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_position</span><span class="p">((</span><span class="n">cbar_pos</span><span class="o">.</span><span class="n">bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">cbar_left_shift</span><span class="p">,</span><span class="n">cbar_pos</span><span class="o">.</span><span class="n">bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="mf">0.11</span><span class="p">,</span> <span class="n">cbar_width</span><span class="p">,</span> <span class="n">cbar_height</span><span class="p">))</span>
+
+<span class="k">if</span> <span class="n">plot_mutability</span><span class="p">:</span>
+    <span class="n">axd</span><span class="p">[</span><span class="s1">&#39;mutability_cmap&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="s1">&#39;linear&#39;</span><span class="p">)</span>
+    <span class="n">cbar_pos</span> <span class="o">=</span> <span class="n">axd</span><span class="p">[</span><span class="s1">&#39;mutability_cmap&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">get_position</span><span class="p">()</span>
+    <span class="n">axd</span><span class="p">[</span><span class="s1">&#39;mutability_cmap&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_position</span><span class="p">((</span><span class="n">cbar_pos</span><span class="o">.</span><span class="n">bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">cbar_left_shift</span><span class="p">,</span><span class="n">cbar_pos</span><span class="o">.</span><span class="n">bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">cbar_width</span><span class="p">,</span> <span class="n">cbar_pos</span><span class="o">.</span><span class="n">bounds</span><span class="p">[</span><span class="mi">3</span><span class="p">]))</span>
+<span class="k">if</span> <span class="n">plot_properties</span><span class="p">:</span>
+    <span class="n">axd</span><span class="p">[</span><span class="s1">&#39;property_cmap&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="s1">&#39;linear&#39;</span><span class="p">)</span>
+    <span class="n">cbar_pos</span> <span class="o">=</span> <span class="n">axd</span><span class="p">[</span><span class="s1">&#39;property_cmap&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">get_position</span><span class="p">()</span>
+    <span class="n">axd</span><span class="p">[</span><span class="s1">&#39;property_cmap&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_position</span><span class="p">((</span><span class="n">cbar_pos</span><span class="o">.</span><span class="n">bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">cbar_left_shift</span><span class="p">,</span><span class="n">cbar_pos</span><span class="o">.</span><span class="n">bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">cbar_width</span><span class="p">,</span> <span class="n">cbar_pos</span><span class="o">.</span><span class="n">bounds</span><span class="p">[</span><span class="mi">3</span><span class="p">]))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_OCA_T1_analysis_23_0.png" src="../_images/notebooks_OCA_T1_analysis_23_0.png" />
+</div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="create_POU_heatmaps.html" class="btn btn-neutral float-left" title="Making variant effect heatmaps for the POU library" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../modules.html" class="btn btn-neutral float-right" title="DMS_designer" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, John J Desmarais.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

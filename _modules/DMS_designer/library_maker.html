@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DMS_designer.library_maker &mdash; DMS Designer v0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            DMS Designer
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Example Notebooks:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../notebooks.html">Example Notebooks</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">DMS_designer</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">DMS Designer</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">DMS_designer.library_maker</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for DMS_designer.library_maker</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Library Maker for Protein Mutagenesis Studies</span>
+
+<span class="sd">This module provides tools for creating oligonucleotide libraries for deep mutational</span>
+<span class="sd">scanning and protein mutagenesis studies. It includes functionality for generating</span>
+<span class="sd">single and multiple amino acid mutants, creating synonymous nucleotide variants,</span>
+<span class="sd">and analyzing library composition.</span>
+
+<span class="sd">The module reads codon usage data from &#39;codon_usage.xlsx&#39; to generate realistic</span>
+<span class="sd">nucleotide sequences that encode the desired protein variants.</span>
+
+<span class="sd">Classes</span>
+<span class="sd">-------</span>
+<span class="sd">LibraryMaker</span>
+<span class="sd">    Main class for creating mutagenesis libraries</span>
+
+<span class="sd">Functions</span>
+<span class="sd">---------</span>
+<span class="sd">aa_to_codon : Convert amino acid to codon using codon usage table</span>
+<span class="sd">protein_to_orf : Convert protein sequence to open reading frame</span>
+<span class="sd">orf_to_protein : Convert open reading frame to protein sequence</span>
+<span class="sd">summarize_file : Generate analysis plots and statistics for library files</span>
+
+<span class="sd">Examples</span>
+<span class="sd">--------</span>
+<span class="sd">&gt;&gt;&gt; # Create a library with single and double mutants</span>
+<span class="sd">&gt;&gt;&gt; lm = LibraryMaker(wt_nt=&quot;ATGGCCGAA&quot;, single_mutants=True, doubles_to_make=&#39;equal&#39;)</span>
+<span class="sd">&gt;&gt;&gt; </span>
+<span class="sd">&gt;&gt;&gt; # Analyze a library file</span>
+<span class="sd">&gt;&gt;&gt; summarize_file(&#39;my_library.csv&#39;, out_path=&#39;./analysis/&#39;)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mpl</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logomaker</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">mavenn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">os</span><span class="w"> </span><span class="kn">import</span> <span class="n">path</span> 
+<span class="kn">import</span><span class="w"> </span><span class="nn">itertools</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="kn">import</span> <span class="n">comb</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">seaborn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sns</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">importlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">resources</span>
+<span class="n">codon_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span><span class="n">resources</span><span class="o">.</span><span class="n">files</span><span class="p">(</span><span class="s1">&#39;DMS_designer&#39;</span><span class="p">)</span> <span class="o">/</span> <span class="s1">&#39;codon_usage.xlsx&#39;</span><span class="p">)</span>
+<span class="n">codon_df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;codon&#39;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">amino_acids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">aa</span> <span class="k">for</span> <span class="n">aa</span> <span class="ow">in</span> <span class="n">codon_df</span><span class="p">[</span><span class="s1">&#39;aa&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()])</span>
+<span class="n">amino_acids</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+
+<span class="n">aa_to_codon_dict</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">for</span> <span class="n">aa</span> <span class="ow">in</span> <span class="n">codon_df</span><span class="p">[</span><span class="s1">&#39;aa&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">():</span>
+    <span class="n">ix</span> <span class="o">=</span> <span class="p">(</span><span class="n">codon_df</span><span class="p">[</span><span class="s1">&#39;aa&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">aa</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">codon_df</span><span class="p">[</span><span class="s1">&#39;use&#39;</span><span class="p">])</span>
+    <span class="k">assert</span> <span class="nb">sum</span><span class="p">(</span><span class="n">ix</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;Amino acid &quot;</span><span class="si">{</span><span class="n">aa</span><span class="si">}</span><span class="s1">&quot; has no codon. Abort!&#39;</span>
+    <span class="n">codons</span> <span class="o">=</span> <span class="n">codon_df</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">ix</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">aa_to_codon_dict</span><span class="p">[</span><span class="n">aa</span><span class="p">]</span> <span class="o">=</span> <span class="n">codons</span>
+    
+<div class="viewcode-block" id="aa_to_codon"><a class="viewcode-back" href="../../DMS_designer.html#DMS_designer.library_maker.aa_to_codon">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">aa_to_codon</span><span class="p">(</span><span class="n">aa</span><span class="p">,</span> <span class="n">aa_to_codon_dict</span><span class="o">=</span><span class="n">aa_to_codon_dict</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert an amino acid to a codon according to intrinsic probabilities.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    aa : str</span>
+<span class="sd">        Single amino acid character to convert to codon</span>
+<span class="sd">    aa_to_codon_dict : dict, optional</span>
+<span class="sd">        Dictionary mapping amino acids to their codons. If None, uses the default codon usage table.</span>
+<span class="sd">    rng : numpy.random.Generator, optional</span>
+<span class="sd">        Random number generator instance. If None, creates a new default generator.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Three-nucleotide codon encoding the amino acid</span>
+<span class="sd">        </span>
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    AssertionError</span>
+<span class="sd">        If the amino acid is not found in the codon usage table</span>
+<span class="sd">        </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Uses the codon usage probabilities defined in the loaded &#39;codon_usage.xlsx&#39; file.</span>
+<span class="sd">    Only codons marked as &#39;use=True&#39; in the table are considered.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">rng</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="n">aa</span> <span class="ow">in</span> <span class="n">aa_to_codon_dict</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;Amino acid &quot;</span><span class="si">{</span><span class="n">aa</span><span class="si">}</span><span class="s1">&quot; has no codon. Abort!&#39;</span>
+    <span class="n">codon</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="n">aa_to_codon_dict</span><span class="p">[</span><span class="n">aa</span><span class="p">],</span> <span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span><span class="p">(</span><span class="n">codon</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="protein_to_orf"><a class="viewcode-back" href="../../DMS_designer.html#DMS_designer.library_maker.protein_to_orf">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">protein_to_orf</span><span class="p">(</span><span class="n">protein</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">aa_to_codon_dict</span><span class="o">=</span><span class="n">aa_to_codon_dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert a protein sequence to an open reading frame using codon usage table.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    protein : str</span>
+<span class="sd">        Protein sequence as a string of amino acid characters</span>
+<span class="sd">    rng : numpy.random.Generator, optional</span>
+<span class="sd">        Random number generator instance. If None, creates a new default generator.</span>
+<span class="sd">    aa_to_codon_dict : dict, optional</span>
+<span class="sd">        Dictionary mapping amino acids to their codons. If None, uses the default codon usage table.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Nucleotide sequence encoding the protein according to codon usage probabilities</span>
+<span class="sd">        </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Each amino acid is converted to a codon using the probabilities defined in</span>
+<span class="sd">    the codon usage table. Multiple calls with the same protein may produce</span>
+<span class="sd">    different nucleotide sequences due to synonymous codon variation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">rng</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">()</span>
+    <span class="k">return</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">aa_to_codon</span><span class="p">(</span><span class="n">aa</span><span class="p">,</span><span class="n">rng</span><span class="o">=</span><span class="n">rng</span><span class="p">,</span> <span class="n">aa_to_codon_dict</span><span class="o">=</span><span class="n">aa_to_codon_dict</span><span class="p">)</span> <span class="k">for</span> <span class="n">aa</span> <span class="ow">in</span> <span class="n">protein</span><span class="p">]))</span></div>
+
+<div class="viewcode-block" id="orf_to_protein"><a class="viewcode-back" href="../../DMS_designer.html#DMS_designer.library_maker.orf_to_protein">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">orf_to_protein</span><span class="p">(</span><span class="n">orf</span><span class="p">,</span> <span class="n">codon_df</span><span class="o">=</span><span class="n">codon_df</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert an open reading frame to a protein sequence.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    orf : str</span>
+<span class="sd">        Nucleotide sequence to translate. Must be a multiple of 3.</span>
+<span class="sd">    codon_df : pd.DataFrame, optional</span>
+<span class="sd">        DataFrame containing codon usage information. If None, uses the default codon usage table.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Protein sequence translated from the nucleotide sequence</span>
+<span class="sd">        </span>
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    AssertionError</span>
+<span class="sd">        If the nucleotide sequence length is not a multiple of 3</span>
+<span class="sd">        </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Uses the codon-to-amino acid mapping defined in the loaded &#39;codon_usage.xlsx&#39; file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Convert an ORF to protein sequence</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">orf</span><span class="p">)</span><span class="o">%</span><span class="mi">3</span><span class="o">==</span><span class="mi">0</span>
+    <span class="n">num_codons</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">orf</span><span class="p">)</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">codons</span> <span class="o">=</span> <span class="p">[</span><span class="n">orf</span><span class="p">[(</span><span class="n">i</span><span class="o">*</span><span class="mi">3</span><span class="p">):(</span><span class="n">i</span><span class="o">*</span><span class="mi">3</span><span class="o">+</span><span class="mi">3</span><span class="p">)]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_codons</span><span class="p">)]</span>
+    <span class="k">return</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">codon_df</span><span class="p">[</span><span class="s1">&#39;aa&#39;</span><span class="p">][</span><span class="n">codon</span><span class="p">]</span> <span class="k">for</span> <span class="n">codon</span> <span class="ow">in</span> <span class="n">codons</span><span class="p">]))</span></div>
+
+<div class="viewcode-block" id="summarize_file"><a class="viewcode-back" href="../../DMS_designer.html#DMS_designer.library_maker.summarize_file">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">summarize_file</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">out_path</span> <span class="o">=</span> <span class="s1">&#39;./&#39;</span><span class="p">,</span> <span class="n">fig_width</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="s1">&#39;talk&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate comprehensive analysis and visualization of a mutagenesis library file.</span>
+<span class="sd">    </span>
+<span class="sd">    This function reads a CSV file containing library variants and generates multiple</span>
+<span class="sd">    plots and statistics including variant counts, mutant distributions, heatmaps,</span>
+<span class="sd">    and position-by-position analysis.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file_name : str</span>
+<span class="sd">        Path to the CSV file containing the library data. Expected columns:</span>
+<span class="sd">        &#39;name&#39;, &#39;protein&#39;, &#39;orf&#39;, &#39;oligo&#39;</span>
+<span class="sd">    out_path : str, default &#39;./&#39;</span>
+<span class="sd">        Directory path where output figures will be saved</span>
+<span class="sd">    fig_width : int, default 12</span>
+<span class="sd">        Base width for generated figures. Height is typically equal to width</span>
+<span class="sd">    context : {&#39;talk&#39;, &#39;paper&#39;, &#39;notebook&#39;, &#39;poster&#39;}, default &#39;talk&#39;</span>
+<span class="sd">        Seaborn plotting context for figure styling</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    None</span>
+<span class="sd">        </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The function generates the following output files:</span>
+<span class="sd">    - variant_count_[filename].pdf: Count of variants by mutation number</span>
+<span class="sd">    - mutant_count_[filename].pdf: Count of unique mutants by mutation number  </span>
+<span class="sd">    - mutant_fraction_[filename].pdf: Fraction of possible mutants generated</span>
+<span class="sd">    - mutant_observations_[filename].pdf: Distribution of observations per mutant</span>
+<span class="sd">    - [N]pt_heatmap_[filename].pdf: Heatmaps showing amino acid frequencies at each position</span>
+<span class="sd">    - [N]pt_mutant_heatmap_[filename].pdf: Heatmaps for unique mutants only</span>
+<span class="sd">    - 2pt_2d_heatmap_[filename].pdf: Position-by-position matrix for double mutants</span>
+<span class="sd">        </span>
+<span class="sd">    The function also prints summary statistics to the console including:</span>
+<span class="sd">    - Wild-type sequence information</span>
+<span class="sd">    - Counts of variants by mutation number</span>
+<span class="sd">    - Total library size</span>
+<span class="sd">    - Fraction of possible mutants generated</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sns</span><span class="o">.</span><span class="n">set_context</span><span class="p">(</span><span class="n">context</span><span class="p">)</span>
+    <span class="n">sns</span><span class="o">.</span><span class="n">set_palette</span><span class="p">(</span><span class="s1">&#39;colorblind&#39;</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Processing </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">extract</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(?P&lt;mut_num&gt;\d+)pt_(?P&lt;mutation_desc&gt;.+)_v(?P&lt;version&gt;\d+)&#39;</span><span class="p">))</span>
+    <span class="n">df</span><span class="o">.</span><span class="n">mut_num</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">mut_num</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">file_name</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+
+    <span class="n">wt_aa</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s1">&#39;0pt_WT_v1&#39;</span><span class="p">,</span><span class="s1">&#39;protein&#39;</span><span class="p">]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;WT aa seq (L=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">wt_aa</span><span class="p">)</span><span class="si">}</span><span class="s1">):</span><span class="se">\n\t</span><span class="si">{</span><span class="n">wt_aa</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="n">wt_orf</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s1">&#39;0pt_WT_v1&#39;</span><span class="p">,</span><span class="s1">&#39;orf&#39;</span><span class="p">]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;WT dna seq (L=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">wt_orf</span><span class="p">)</span><span class="si">}</span><span class="s1">):</span><span class="se">\n\t</span><span class="si">{</span><span class="n">wt_orf</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="n">wt_oligo</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s1">&#39;0pt_WT_v1&#39;</span><span class="p">,</span><span class="s1">&#39;oligo&#39;</span><span class="p">]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;WT oligo seq (L=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">wt_oligo</span><span class="p">)</span><span class="si">}</span><span class="s1">):</span><span class="se">\n\t</span><span class="si">{</span><span class="n">wt_oligo</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">figsize</span><span class="o">=</span><span class="p">[</span><span class="n">fig_width</span><span class="p">,</span><span class="n">fig_width</span><span class="p">])</span>
+    <span class="n">mut_nums</span><span class="p">,</span> <span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">mut_num</span><span class="p">,</span> <span class="n">return_counts</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">mut_nums</span><span class="p">,</span> <span class="n">counts</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Mutation number&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Variant count&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">mut_nums</span><span class="p">,</span> <span class="n">mut_nums</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">out_path</span><span class="o">+</span><span class="sa">f</span><span class="s1">&#39;variant_count_</span><span class="si">{</span><span class="n">file_name</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span><span class="si">}</span><span class="s1">.pdf&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">mut_num</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">mut_nums</span><span class="p">,</span> <span class="n">counts</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Number of </span><span class="si">{</span><span class="n">mut_num</span><span class="si">}</span><span class="s1"> variants: </span><span class="si">{</span><span class="n">count</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Total number of variants: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">figsize</span><span class="o">=</span><span class="p">[</span><span class="n">fig_width</span><span class="p">,</span><span class="n">fig_width</span><span class="p">])</span>
+    <span class="n">mut_nums</span><span class="p">,</span> <span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="s1">&#39;mutation_desc&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">mut_num</span><span class="p">,</span> <span class="n">return_counts</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">mut_nums</span><span class="p">,</span> <span class="n">counts</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Mutation number&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Mutant count&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">mut_nums</span><span class="p">,</span> <span class="n">mut_nums</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">out_path</span><span class="o">+</span><span class="sa">f</span><span class="s1">&#39;mutant_count_</span><span class="si">{</span><span class="n">file_name</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span><span class="si">}</span><span class="s1">.pdf&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">mut_num</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">mut_nums</span><span class="p">,</span> <span class="n">counts</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Number of </span><span class="si">{</span><span class="n">mut_num</span><span class="si">}</span><span class="s1"> mutant variants: </span><span class="si">{</span><span class="n">count</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">figsize</span><span class="o">=</span><span class="p">[</span><span class="n">fig_width</span><span class="p">,</span><span class="n">fig_width</span><span class="p">])</span>
+    <span class="n">mut_nums</span><span class="p">,</span> <span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="s1">&#39;mutation_desc&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">mut_num</span><span class="p">,</span> <span class="n">return_counts</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">total_possible</span> <span class="o">=</span> <span class="p">[</span><span class="n">comb</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">wt_aa</span><span class="p">),</span> <span class="n">mut_num</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">19</span><span class="o">**</span><span class="n">mut_num</span><span class="p">)</span> <span class="k">if</span> <span class="n">mut_num</span><span class="o">!=</span><span class="mi">1</span> <span class="k">else</span> <span class="n">comb</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">wt_aa</span><span class="p">),</span> <span class="n">mut_num</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">20</span><span class="o">**</span><span class="n">mut_num</span><span class="p">)</span> <span class="k">for</span> <span class="n">mut_num</span> <span class="ow">in</span> <span class="n">mut_nums</span><span class="p">]</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">mut_nums</span><span class="p">,</span> <span class="n">counts</span><span class="o">/</span><span class="n">total_possible</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Mutation number&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Fraction of possible mutants&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">mut_nums</span><span class="p">,</span> <span class="n">mut_nums</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">out_path</span><span class="o">+</span><span class="sa">f</span><span class="s1">&#39;mutant_fraction_</span><span class="si">{</span><span class="n">file_name</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span><span class="si">}</span><span class="s1">.pdf&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">mut_num</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">mut_nums</span><span class="p">,</span> <span class="n">counts</span><span class="o">/</span><span class="n">total_possible</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Fraction of possible </span><span class="si">{</span><span class="n">mut_num</span><span class="si">}</span><span class="s1"> mutants: </span><span class="si">{</span><span class="n">count</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">figsize</span><span class="o">=</span><span class="p">[</span><span class="n">fig_width</span><span class="p">,</span><span class="n">fig_width</span><span class="p">])</span>
+    <span class="n">counts</span> <span class="o">=</span> <span class="n">df</span><span class="p">[[</span><span class="s1">&#39;mut_num&#39;</span><span class="p">,</span><span class="s1">&#39;mutation_desc&#39;</span><span class="p">,</span><span class="s1">&#39;version&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s1">&#39;mut_num&#39;</span><span class="p">,</span><span class="s1">&#39;mutation_desc&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">count</span><span class="p">()</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">boxplot</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">counts</span><span class="p">,</span><span class="n">x</span><span class="o">=</span><span class="s1">&#39;mut_num&#39;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s1">&#39;version&#39;</span><span class="p">,</span> <span class="n">showfliers</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+    <span class="n">sns</span><span class="o">.</span><span class="n">stripplot</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">counts</span><span class="p">,</span><span class="n">x</span><span class="o">=</span><span class="s1">&#39;mut_num&#39;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s1">&#39;version&#39;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">p</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Number of observations per mutant&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Mutant number&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">out_path</span><span class="o">+</span><span class="sa">f</span><span class="s1">&#39;mutant_observations_</span><span class="si">{</span><span class="n">file_name</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span><span class="si">}</span><span class="s1">.pdf&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Compute the number of variants with each amino acid at each position</span>
+    <span class="n">wt_mat</span> <span class="o">=</span> <span class="n">logomaker</span><span class="o">.</span><span class="n">alignment_to_matrix</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="o">.</span><span class="n">mut_num</span><span class="o">==</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;protein&#39;</span><span class="p">])</span>
+    <span class="n">wt_mat</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">wt_mat</span><span class="o">.</span><span class="n">index</span><span class="o">+</span><span class="mi">1</span>
+    <span class="n">wt_mask</span><span class="o">=</span><span class="n">wt_mat</span><span class="o">&gt;</span><span class="mi">0</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;mut_num&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">name</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">ct_mat</span> <span class="o">=</span> <span class="n">logomaker</span><span class="o">.</span><span class="n">alignment_to_matrix</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">group</span><span class="p">[</span><span class="s1">&#39;protein&#39;</span><span class="p">],</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="n">wt_aa</span><span class="p">])]))</span>
+            <span class="n">ct_mat</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">ct_mat</span><span class="o">.</span><span class="n">index</span><span class="o">+</span><span class="mi">1</span>
+            <span class="n">ct_mat</span><span class="p">[</span><span class="n">wt_mask</span><span class="p">]</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+            <span class="n">alphabet</span> <span class="o">=</span> <span class="n">ct_mat</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">values</span>
+        
+            <span class="n">n_pos</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ct_mat</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+            <span class="n">n_aas</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">alphabet</span><span class="p">)</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Total counts in </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1"> mutant heatmap: </span><span class="si">{</span><span class="n">ct_mat</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+
+            <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">figsize</span><span class="o">=</span><span class="p">[</span><span class="n">fig_width</span><span class="o">*</span><span class="p">(</span><span class="mi">3</span><span class="o">/</span><span class="mi">2</span><span class="p">),</span><span class="n">fig_width</span><span class="o">/</span><span class="mf">1.5</span><span class="p">])</span>
+            <span class="n">cmap</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">magma</span>
+            <span class="n">cmap</span><span class="o">.</span><span class="n">set_bad</span><span class="p">(</span><span class="s1">&#39;#516572&#39;</span><span class="p">)</span>
+            <span class="n">mavenn</span><span class="o">.</span><span class="n">heatmap</span><span class="p">(</span><span class="n">ct_mat</span><span class="p">,</span> 
+                        <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
+                        <span class="n">alphabet</span><span class="o">=</span><span class="n">alphabet</span><span class="p">,</span> 
+                        <span class="n">clim</span><span class="o">=</span><span class="p">[</span><span class="n">ct_mat</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span><span class="n">ct_mat</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">max</span><span class="p">()],</span> 
+                        <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span> 
+                        <span class="n">seq</span><span class="o">=</span><span class="n">wt_aa</span><span class="p">,</span> 
+                        <span class="n">seq_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;color&#39;</span><span class="p">:</span><span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="s1">&#39;s&#39;</span><span class="p">:</span><span class="mi">5</span><span class="p">})</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">pt variants&#39;</span><span class="p">);</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;variant position&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;variant aa&#39;</span><span class="p">)</span>
+
+            <span class="c1"># There must be an easier way to do this; should build into MAVE-NN</span>
+            <span class="n">xticks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">wt_aa</span><span class="p">),</span><span class="mi">5</span><span class="p">))</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">xticks</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">([</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">xticks</span><span class="p">])</span>
+
+            <span class="n">heatmap_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">pt_heatmap_</span><span class="si">{</span><span class="n">file_name</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span><span class="si">}</span><span class="s1">.pdf&#39;</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">out_path</span><span class="o">+</span><span class="n">heatmap_name</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Heatmap saved as </span><span class="si">{</span><span class="n">heatmap_name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            
+            <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">figsize</span><span class="o">=</span><span class="p">[</span><span class="n">fig_width</span><span class="p">,</span><span class="n">fig_width</span><span class="p">])</span>
+            <span class="n">value</span><span class="p">,</span> <span class="n">count</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">ct_mat</span><span class="o">.</span><span class="n">stack</span><span class="p">(),</span> <span class="n">return_counts</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">count</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Number of </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">pt variants per single mutant&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Number of </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">pt variants&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Number of single mutants&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">)</span>
+            <span class="n">heatmap_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;2pt_doubles_p_singles_</span><span class="si">{</span><span class="n">file_name</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span><span class="si">}</span><span class="s1">.pdf&#39;</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">out_path</span><span class="o">+</span><span class="n">heatmap_name</span><span class="p">)</span>
+
+
+            <span class="c1">#recalculate for mutants not variants</span>
+            <span class="n">ct_mat</span> <span class="o">=</span> <span class="n">logomaker</span><span class="o">.</span><span class="n">alignment_to_matrix</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">group</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="s1">&#39;mutation_desc&#39;</span><span class="p">)[</span><span class="s1">&#39;protein&#39;</span><span class="p">],</span>
+                                                              <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="n">wt_aa</span><span class="p">])]))</span>
+            <span class="n">ct_mat</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">ct_mat</span><span class="o">.</span><span class="n">index</span><span class="o">+</span><span class="mi">1</span>
+            <span class="n">ct_mat</span><span class="p">[</span><span class="n">wt_mask</span><span class="p">]</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+            <span class="n">alphabet</span> <span class="o">=</span> <span class="n">ct_mat</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">values</span>
+        
+            <span class="n">n_pos</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ct_mat</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+            <span class="n">n_aas</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">alphabet</span><span class="p">)</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Mutant observances in </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1"> mutant heatmap: </span><span class="si">{</span><span class="n">ct_mat</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+
+            <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">figsize</span><span class="o">=</span><span class="p">[</span><span class="n">fig_width</span><span class="o">*</span><span class="p">(</span><span class="mi">3</span><span class="o">/</span><span class="mi">2</span><span class="p">),</span><span class="n">fig_width</span><span class="o">/</span><span class="mf">1.5</span><span class="p">])</span>
+            <span class="n">cmap</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">magma</span>
+            <span class="n">cmap</span><span class="o">.</span><span class="n">set_bad</span><span class="p">(</span><span class="s1">&#39;#516572&#39;</span><span class="p">)</span>
+            <span class="n">mavenn</span><span class="o">.</span><span class="n">heatmap</span><span class="p">(</span><span class="n">ct_mat</span><span class="p">,</span> 
+                        <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
+                        <span class="n">alphabet</span><span class="o">=</span><span class="n">alphabet</span><span class="p">,</span> 
+                        <span class="n">clim</span><span class="o">=</span><span class="p">[</span><span class="n">ct_mat</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span><span class="n">ct_mat</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">max</span><span class="p">()],</span> 
+                        <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span> 
+                        <span class="n">seq</span><span class="o">=</span><span class="n">wt_aa</span><span class="p">,</span> 
+                        <span class="n">seq_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;color&#39;</span><span class="p">:</span><span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="s1">&#39;s&#39;</span><span class="p">:</span><span class="mi">5</span><span class="p">})</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">pt mutants&#39;</span><span class="p">);</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;mutant position&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;mutant aa&#39;</span><span class="p">)</span>
+
+            <span class="c1"># There must be an easier way to do this; should build into MAVE-NN</span>
+            <span class="n">xticks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">wt_aa</span><span class="p">),</span><span class="mi">5</span><span class="p">))</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">xticks</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">([</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">xticks</span><span class="p">])</span>
+
+            <span class="n">heatmap_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">pt_mutant_heatmap_</span><span class="si">{</span><span class="n">file_name</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span><span class="si">}</span><span class="s1">.pdf&#39;</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">out_path</span><span class="o">+</span><span class="n">heatmap_name</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Heatmap saved as </span><span class="si">{</span><span class="n">heatmap_name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            
+            <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">figsize</span><span class="o">=</span><span class="p">[</span><span class="n">fig_width</span><span class="p">,</span><span class="n">fig_width</span><span class="p">])</span>
+            <span class="n">value</span><span class="p">,</span> <span class="n">count</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">ct_mat</span><span class="o">.</span><span class="n">stack</span><span class="p">(),</span> <span class="n">return_counts</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">count</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Number of </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">pt mutants per single mutant&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Number of </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">pt mutants&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Number of single mutants&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">)</span>
+            <span class="n">heatmap_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;2pt_mutant_doubles_p_singles_</span><span class="si">{</span><span class="n">file_name</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span><span class="si">}</span><span class="s1">.pdf&#39;</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">out_path</span><span class="o">+</span><span class="n">heatmap_name</span><span class="p">)</span>
+    
+    <span class="n">ct_2pt</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">mut_num</span> <span class="o">==</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Number of 2pt variants: </span><span class="si">{</span><span class="n">ct_2pt</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ct_2pt</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">n_pos</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">wt_aa</span><span class="p">)</span>
+        <span class="n">n_aas</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">amino_acids</span><span class="p">)</span>
+        <span class="c1"># Compute the number of variants with each amino acid at each position</span>
+        <span class="n">df_2pt</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="o">.</span><span class="n">mut_num</span> <span class="o">==</span> <span class="mi">2</span><span class="p">]</span>
+
+        <span class="n">mut_aa</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">df_2pt</span><span class="p">[</span><span class="s1">&#39;protein&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">x</span><span class="p">))))</span>
+        <span class="n">wt_aa_arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">wt_aa</span><span class="p">))</span>
+        <span class="n">seq</span><span class="p">,</span> <span class="n">position</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">wt_aa_arr</span><span class="p">[</span><span class="kc">None</span><span class="p">,:]</span> <span class="o">!=</span> <span class="n">mut_aa</span><span class="p">)</span>
+        <span class="n">aas</span> <span class="o">=</span> <span class="n">mut_aa</span><span class="p">[</span><span class="n">seq</span><span class="p">,</span> <span class="n">position</span><span class="p">]</span>
+        <span class="n">seqs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span>
+        <span class="n">seq</span> <span class="o">=</span> <span class="n">seq</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">seqs</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="n">seq</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">seq</span><span class="p">[:,</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        <span class="n">position</span> <span class="o">=</span> <span class="n">position</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">seqs</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+        <span class="n">aas</span> <span class="o">=</span> <span class="n">aas</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">seqs</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+
+        <span class="n">s_id</span><span class="p">,</span> <span class="n">n_id</span><span class="p">,</span> <span class="n">aa_id</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">amino_acids</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span><span class="kc">None</span><span class="p">,:]</span> <span class="o">==</span> <span class="n">aas</span><span class="p">[:,:,</span><span class="kc">None</span><span class="p">])</span>
+        <span class="n">aas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">aas</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">aas</span><span class="p">[</span><span class="n">s_id</span><span class="p">,</span> <span class="n">n_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">aa_id</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="n">aas</span><span class="o">!=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+        <span class="n">pt2_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_pos</span><span class="p">,</span><span class="n">n_pos</span><span class="p">,</span><span class="n">n_aas</span><span class="p">,</span><span class="n">n_aas</span><span class="p">))</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="p">(</span><span class="n">aa_i</span><span class="p">,</span> <span class="n">aa_j</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">position</span><span class="p">,</span> <span class="n">aas</span><span class="p">):</span>
+            <span class="n">pt2_mat</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span><span class="n">aa_i</span><span class="p">,</span> <span class="n">aa_j</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="n">fig_width</span><span class="p">,</span><span class="n">fig_width</span><span class="p">))</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">pt2_mat</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;magma&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Position by position 2pt counts matrix&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Position&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Position&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">)</span>
+        <span class="n">cbar</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Total counts for 2pt pairs&#39;</span><span class="p">)</span>
+        <span class="n">cbar</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Total counts for 2pt pairs&#39;</span><span class="p">,</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">270</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+        <span class="n">heatmap_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;2pt_2d_heatmap_</span><span class="si">{</span><span class="n">file_name</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span><span class="si">}</span><span class="s1">.pdf&#39;</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">out_path</span><span class="o">+</span><span class="n">heatmap_name</span><span class="p">)</span></div>
+        
+    
+    
+
+<div class="viewcode-block" id="LibraryMaker"><a class="viewcode-back" href="../../DMS_designer.html#DMS_designer.library_maker.LibraryMaker">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">LibraryMaker</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create oligonucleotide libraries for protein mutagenesis studies.</span>
+<span class="sd">    </span>
+<span class="sd">    This class generates comprehensive mutagenesis libraries including single and</span>
+<span class="sd">    multiple amino acid mutants, synonymous nucleotide variants, and focused</span>
+<span class="sd">    mutagenesis at specific positions. The library is designed for deep mutational</span>
+<span class="sd">    scanning experiments.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    wt_nt : str</span>
+<span class="sd">        The nucleotide sequence of the wild-type variant. This sequence should</span>
+<span class="sd">        encode an amino acid sequence, start on the first nucleotide of the first</span>
+<span class="sd">        codon to be mutagenized, and end on the last nucleotide of the last</span>
+<span class="sd">        codon to be mutagenized.</span>
+<span class="sd">    single_mutants : bool, default True</span>
+<span class="sd">        If True, generate every possible single amino acid mutant of the wild-type</span>
+<span class="sd">        variant.</span>
+<span class="sd">    doubles_to_make : str, float, or int, default &#39;equal&#39;</span>
+<span class="sd">        Controls the number of double mutants to generate:</span>
+<span class="sd">        </span>
+<span class="sd">        - &#39;equal&#39;: Generate random double mutants equal to the number of single mutants</span>
+<span class="sd">        - &#39;max:N&#39;: Generate as many random double mutants as possible without exceeding</span>
+<span class="sd">          N total oligos for synthesis</span>
+<span class="sd">        - float: Generate that fraction of the number of single mutants as random</span>
+<span class="sd">          double mutants</span>
+<span class="sd">        - int: Generate exactly that number of random double mutants</span>
+<span class="sd">    name : str, default &#39;Mutant_lib&#39;</span>
+<span class="sd">        Name of the library to be created. Used as prefix for output files.</span>
+<span class="sd">    var_num : int, default 3</span>
+<span class="sd">        Number of different synonymous nucleotide variants to generate for each mutant.</span>
+<span class="sd">    wt_num : int, default 100</span>
+<span class="sd">        Number of different synonymous nucleotide variants to generate for the</span>
+<span class="sd">        wild-type sequence.</span>
+<span class="sd">    max_tries : int, default 100</span>
+<span class="sd">        Maximum number of attempts to generate a unique random mutant or variant</span>
+<span class="sd">        before giving up.</span>
+<span class="sd">    focus_positions : list of int, default []</span>
+<span class="sd">        Amino acid positions (0-indexed) to be mutated in greater depth.</span>
+<span class="sd">    focus_to_make : int, float, or str, default 0</span>
+<span class="sd">        Controls focused mutagenesis when focus_positions is specified:</span>
+<span class="sd">        </span>
+<span class="sd">        - int/float: Generate that many random combinations of mutations at focus positions</span>
+<span class="sd">        - &#39;singles&#39;: Generate all single mutants of the focus positions</span>
+<span class="sd">        - &#39;doubles&#39;: Generate all double mutants of the focus positions  </span>
+<span class="sd">        - &#39;singles_doubles&#39;: Generate all single and double mutants of the focus positions</span>
+<span class="sd">        - &#39;all&#39;: Generate every possible combination of mutations at the focus positions</span>
+<span class="sd">    focus_mutants_per : int, default 3</span>
+<span class="sd">        Average number of mutations desired per focused mutant (used when focus_to_make</span>
+<span class="sd">        is numeric).</span>
+<span class="sd">    focus_mutants_per_spread : float, default 0</span>
+<span class="sd">        Probability spread for mutation numbers other than focus_mutants_per.</span>
+<span class="sd">        Probability decays arithmetically as you move away from the target.</span>
+<span class="sd">    focus_mutants_per_min : int, default 0</span>
+<span class="sd">        Minimum number of mutations per focused mutant.</span>
+<span class="sd">    focus_mutants_per_max : int, default 0</span>
+<span class="sd">        Maximum number of mutations per focused mutant.</span>
+<span class="sd">    upstream_dna : str, default &#39;ATGGAAAGTGTCCCAGGAGACTACAGC&#39;</span>
+<span class="sd">        Upstream adapter sequence to append to the 5&#39; end of oligonucleotides.</span>
+<span class="sd">    downstream_dna : str, default &#39;CAGACAAGTAACTCAAGACTTAATGGC&#39;</span>
+<span class="sd">        Downstream adapter sequence to append to the 3&#39; end of oligonucleotides.</span>
+<span class="sd">    out_path : str, default &#39;./&#39;</span>
+<span class="sd">        Directory path for output files. Directory must already exist.</span>
+<span class="sd">    seed : int, optional</span>
+<span class="sd">        Random seed for reproducibility. If None, uses system default.</span>
+<span class="sd">    fig_width : int, default 8</span>
+<span class="sd">        Base width for generated analysis figures.</span>
+<span class="sd">    context : {&#39;talk&#39;, &#39;paper&#39;, &#39;notebook&#39;, &#39;poster&#39;}, default &#39;talk&#39;</span>
+<span class="sd">        Seaborn plotting context for figure styling.</span>
+<span class="sd">        </span>
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    wt_nt : str</span>
+<span class="sd">        Wild-type nucleotide sequence</span>
+<span class="sd">    wt_protein : str</span>
+<span class="sd">        Wild-type protein sequence</span>
+<span class="sd">    L : int</span>
+<span class="sd">        Length of the protein sequence</span>
+<span class="sd">    variant_dict : dict</span>
+<span class="sd">        Dictionary mapping variant names to protein sequences</span>
+<span class="sd">    orf_dict : dict</span>
+<span class="sd">        Dictionary mapping variant names to nucleotide sequences</span>
+<span class="sd">    orf_df : pandas.DataFrame</span>
+<span class="sd">        Final library data with columns: name, protein, orf, oligo</span>
+<span class="sd">    file_name : str</span>
+<span class="sd">        Name of the saved CSV file</span>
+<span class="sd">    date_time : str</span>
+<span class="sd">        Timestamp of library creation</span>
+<span class="sd">        </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The library generation process:</span>
+<span class="sd">    1. Creates single mutants (if enabled)</span>
+<span class="sd">    2. Creates random double mutants (if enabled)</span>
+<span class="sd">    3. Creates focused mutants (if focus positions specified)</span>
+<span class="sd">    4. Generates synonymous nucleotide variants for each protein variant</span>
+<span class="sd">    5. Saves results to CSV file</span>
+<span class="sd">    6. Generates analysis plots and statistics</span>
+<span class="sd">    </span>
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; # Create a simple library with single mutants only</span>
+<span class="sd">    &gt;&gt;&gt; lm = LibraryMaker(&quot;ATGGCCGAA&quot;, single_mutants=True, doubles_to_make=0)</span>
+<span class="sd">    &gt;&gt;&gt; </span>
+<span class="sd">    &gt;&gt;&gt; # Create a comprehensive library with focused mutagenesis</span>
+<span class="sd">    &gt;&gt;&gt; lm = LibraryMaker(&quot;ATGGCCGAA&quot;, </span>
+<span class="sd">    ...                   single_mutants=True,</span>
+<span class="sd">    ...                   doubles_to_make=&#39;equal&#39;,</span>
+<span class="sd">    ...                   focus_positions=[5, 10, 15],</span>
+<span class="sd">    ...                   focus_to_make=&#39;all&#39;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="LibraryMaker.__init__"><a class="viewcode-back" href="../../DMS_designer.html#DMS_designer.library_maker.LibraryMaker.__init__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wt_nt</span><span class="p">,</span> <span class="n">single_mutants</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">doubles_to_make</span> <span class="o">=</span> <span class="s1">&#39;equal&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Mutant_lib&#39;</span><span class="p">,</span>
+                 <span class="n">var_num</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="n">wt_num</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="n">max_tries</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="n">stop_num</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">focus_positions</span> <span class="o">=</span> <span class="p">[],</span> <span class="n">focus_to_make</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">focus_mutants_per</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">focus_mutants_per_spread</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">focus_mutants_per_min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">focus_mutants_per_max</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                <span class="n">upstream_dna</span> <span class="o">=</span> <span class="s1">&#39;ATGGAAAGTGTCCCAGGAGACTACAGC&#39;</span><span class="p">,</span>
+                 <span class="n">downstream_dna</span> <span class="o">=</span> <span class="s1">&#39;CAGACAAGTAACTCAAGACTTAATGGC&#39;</span><span class="p">,</span>
+                <span class="n">out_path</span> <span class="o">=</span> <span class="s1">&#39;./&#39;</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">codon_df</span><span class="o">=</span><span class="n">codon_df</span><span class="p">,</span> <span class="n">aa_to_codon_dict</span><span class="o">=</span><span class="n">aa_to_codon_dict</span><span class="p">,</span>
+                <span class="n">fig_width</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="s1">&#39;talk&#39;</span><span class="p">,</span> <span class="n">fig_path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This class creates oligo libraries for mutagenesis studies of protein function</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">            wt_nt : string</span>
+<span class="sd">                The nucleotide sequence of the WT variant. This sequence should encode an AA sequence, </span>
+<span class="sd">                start on the first NT of the first codon to be mutagenized, and end on the last nt of the last codon to be mutagenized</span>
+<span class="sd">            single_mutants : bool Default is True</span>
+<span class="sd">                If true, make every possible single AA mutant of the WT variant</span>
+<span class="sd">            doubles_to_make : string, float, or int Default is &#39;equal</span>
+<span class="sd">                If this is the string &#39;equal&#39; make random double mutants equal to the number of single mutants made</span>
+<span class="sd">                If this is a string starting with &#39;max:&#39; follwed by an int, make as many random double mutants as possible </span>
+<span class="sd">                without allowing the number of oligos required to synthesize single and double mutants to exceed the number listed</span>
+<span class="sd">                If this is a float, Make that fraction of the number of single mutants as random duble mutants</span>
+<span class="sd">                If this is an int, Make that number of random double mutants</span>
+<span class="sd">            name : string Default is &#39;Mutant_lib&#39;</span>
+<span class="sd">                name of the library to be created, will be appended as a prefix to the output files</span>
+<span class="sd">            var_num : int default 3</span>
+<span class="sd">                The number of different synonymous nt variants to be made for each mutant</span>
+<span class="sd">            wt_num : int default 100</span>
+<span class="sd">                The number of different synsonymous nt vatriants to be made for the WT sequence</span>
+<span class="sd">            max_tries : int default 100</span>
+<span class="sd">                The number of times to retry making a random mutant or variant if an already existing sequence was created</span>
+<span class="sd">            stop_num : int default None</span>
+<span class="sd">                The number of different synonymous nt variants to be made for each nonsense variant, </span>
+<span class="sd">                if None, default to var_num</span>
+<span class="sd">            focus_positions : list default []</span>
+<span class="sd">                Amino acid positions of AAs to be mutated in greater depth</span>
+<span class="sd">            focus_to_make : int, float, or {&#39;singles&#39;, &#39;doubles&#39;, &#39;singles_doubles&#39;, &#39;all&#39;} default 0</span>
+<span class="sd">                This parameter is only used of focus_positions contains at least 1 element</span>
+<span class="sd">                If this is an int or a float, make that many random combinations of mutations at the focus positions </span>
+<span class="sd">                If this is the string &#39;singles&#39;, make all single mutants of the focus positions</span>
+<span class="sd">                If this is the string &#39;doubles&#39;, make all double mutants of the focus positions</span>
+<span class="sd">                If this is the string &#39;singles_doubles&#39;, make all single and double muatants of the focus positions</span>
+<span class="sd">                If this is the string &#39;all&#39;, make every combination of mutations at the focus positions</span>
+<span class="sd">            focus_mutants_per : int default 0</span>
+<span class="sd">                This parameter is only used of focus_positions contains at least 1 element and focus_to_make is an int or float &gt;0</span>
+<span class="sd">                this indicates the average number of mutations desired per mutant</span>
+<span class="sd">            focus_mutants_per_spread : int default 0</span>
+<span class="sd">                This parameter is only used of focus_positions contains at least 1 element and focus_to_make is an int or float &gt;0</span>
+<span class="sd">                This is the probability of producing a mutation number other than focus_mutants_per, mutation probability will be evenly distributed</span>
+<span class="sd">                between higher and lower mutation numbers with arithmatic decay as you move away from focus_mutants_per</span>
+<span class="sd">            focus_mutants_per_min</span>
+<span class="sd">                This parameter is only used of focus_positions contains at least 1 element and focus_to_make is an int or float &gt;0</span>
+<span class="sd">                This is the minimum mutation number you want to see per mutant</span>
+<span class="sd">            focus_mutants_per_max</span>
+<span class="sd">                This parameter is only used of focus_positions contains at least 1 element and focus_to_make is an int or float &gt;0</span>
+<span class="sd">                This is the Maximum mutation number you want to see per mutant</span>
+<span class="sd">            upstream_dna : string default &#39;ATGGAAAGTGTCCCAGGAGACTACAGC&#39;</span>
+<span class="sd">                This is the upstream adaptor sequence to append to the 5&#39; end of oligos</span>
+<span class="sd">            downstream_dna: string default &#39;CAGACAAGTAACTCAAGACTTAATGGC&#39;</span>
+<span class="sd">                This is the downstream adaptor sequence to append to the 3&#39; end of oligos</span>
+<span class="sd">            out_path : string default &#39;./&#39;</span>
+<span class="sd">                path to place output files. This directory must already exist</span>
+<span class="sd">            codon_df : pd.DataFrame, optional</span>
+<span class="sd">                DataFrame containing codon usage information. If None, uses the default codon usage table.</span>
+<span class="sd">            aa_to_codon_dict : dict, optional</span>
+<span class="sd">                Dictionary mapping amino acids to their codons. If None, uses the default codon usage table.</span>
+<span class="sd">            seed : int Default None</span>
+<span class="sd">                Random seed. Set to ensure reproducibility.</span>
+<span class="sd">            fig_width : int default 8</span>
+<span class="sd">                Size parameter for output figures</span>
+<span class="sd">            context : {&#39;talk&#39;, &#39;paper&#39;, &#39;notebook&#39;, &#39;poster&#39;} default &#39;talk&#39;</span>
+<span class="sd">                Used to set plotting configuration. passed to seaborn.set_context</span>
+<span class="sd">            fig_path : str, default None</span>
+<span class="sd">                Path to save the output figures. If default to out_path.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">start</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">date_time</span> <span class="o">=</span> <span class="n">start</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%y.%m.</span><span class="si">%d</span><span class="s2">.%Hh.%Mm.%Ss&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">wt_nt</span> <span class="o">=</span> <span class="n">wt_nt</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wt_protein</span> <span class="o">=</span> <span class="n">orf_to_protein</span><span class="p">(</span><span class="n">wt_nt</span><span class="p">,</span> <span class="n">codon_df</span><span class="o">=</span><span class="n">codon_df</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">L</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wt_protein</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variant_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;0pt_WT&#39;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">wt_protein</span><span class="p">}</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">out_path</span> <span class="o">=</span> <span class="n">out_path</span>
+        <span class="k">if</span> <span class="n">fig_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fig_path</span> <span class="o">=</span> <span class="n">out_path</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fig_path</span> <span class="o">=</span> <span class="n">fig_path</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">var_num</span> <span class="o">=</span> <span class="n">var_num</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wt_num</span> <span class="o">=</span> <span class="n">wt_num</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_tries</span> <span class="o">=</span> <span class="n">max_tries</span>
+        <span class="k">if</span> <span class="n">stop_num</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stop_num</span> <span class="o">=</span> <span class="n">var_num</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stop_num</span> <span class="o">=</span> <span class="n">stop_num</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">upstream_dna</span> <span class="o">=</span> <span class="n">upstream_dna</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">downstream_dna</span> <span class="o">=</span> <span class="n">downstream_dna</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">focus_positions</span> <span class="o">=</span> <span class="n">focus_positions</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">focus_positions</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">focus_to_make</span> <span class="o">=</span> <span class="n">focus_to_make</span>
+        
+        <span class="k">if</span> <span class="n">single_mutants</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Making singles&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_singles</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">create_singles</span><span class="p">())</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1"> single mutants made</span><span class="se">\n</span><span class="si">%f</span><span class="s1"> sec elapsed</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_singles</span><span class="p">,(</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">-</span><span class="n">start</span><span class="p">)</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()))</span>
+            
+        <span class="k">if</span> <span class="n">doubles_to_make</span> <span class="o">==</span> <span class="s1">&#39;equal&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_doubles</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_singles</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">doubles_to_make</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_doubles</span> <span class="o">=</span> <span class="n">doubles_to_make</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">num_singles</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">doubles_to_make</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_doubles</span> <span class="o">=</span> <span class="n">doubles_to_make</span>
+        <span class="k">elif</span> <span class="n">doubles_to_make</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;max:&#39;</span><span class="p">):</span>
+            <span class="n">doubles_to_make</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">doubles_to_make</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="s1">&#39;max:&#39;</span><span class="p">):])</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">var_num</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">num_singles</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">wt_num</span><span class="p">)</span><span class="o">//</span><span class="bp">self</span><span class="o">.</span><span class="n">var_num</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_doubles</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">doubles_to_make</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;doubles_to_make has an invalid value&quot;</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_doubles</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Making </span><span class="si">%d</span><span class="s1"> doubles&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">num_doubles</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">doubles_made</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">create_doubles</span><span class="p">())</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1"> doubles mutants made</span><span class="se">\n</span><span class="si">%f</span><span class="s1"> sec elapsed</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">doubles_made</span><span class="p">,(</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">-</span><span class="n">start</span><span class="p">)</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()))</span>
+
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">focus_positions</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Making fgocused mutations&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">focus_to_make</span> <span class="o">==</span> <span class="s1">&#39;singles&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">focus_made</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">create_focused_singles</span><span class="p">())</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">focus_to_make</span> <span class="o">==</span> <span class="s1">&#39;doubles&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">focus_made</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">create_focused_doubles</span><span class="p">())</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">focus_to_make</span> <span class="o">==</span> <span class="s1">&#39;singles_doubles&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">focus_made</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">create_focused_singles</span><span class="p">())</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">focus_made</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">focus_made</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">create_focused_doubles</span><span class="p">())</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">focus_to_make</span> <span class="o">==</span> <span class="s1">&#39;all&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">focus_made</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">create_focused_all_combinations</span><span class="p">())</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">focus_to_make</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span><span class="o">|</span><span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">focus_to_make</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="k">assert</span> <span class="p">(</span><span class="n">focus_mutants_per</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">)</span><span class="o">&amp;</span><span class="p">(</span><span class="n">focus_mutants_per</span><span class="o">&lt;=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">focus_positions</span><span class="p">)),</span> <span class="s1">&#39;focus_mutants_per must be a valid number&#39;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">focus_mutants_per</span> <span class="o">=</span> <span class="n">focus_mutants_per</span>
+
+                <span class="k">assert</span> <span class="p">(</span><span class="n">focus_mutants_per_spread</span><span class="o">&gt;=</span><span class="mi">0</span><span class="p">)</span><span class="o">&amp;</span><span class="p">(</span><span class="n">focus_mutants_per_spread</span><span class="o">&lt;=</span><span class="mi">1</span><span class="p">),</span> <span class="s1">&#39;focus_mutants_per_spread must be a valid number&#39;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">focus_mutants_per_spread</span> <span class="o">=</span> <span class="n">focus_mutants_per_spread</span>
+
+                <span class="k">assert</span> <span class="p">(</span><span class="n">focus_mutants_per_min</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">)</span><span class="o">&amp;</span><span class="p">(</span><span class="n">focus_mutants_per_min</span><span class="o">&lt;=</span><span class="n">focus_mutants_per</span><span class="p">),</span> <span class="s1">&#39;focus_mutants_per_min must be a valid number&#39;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">focus_mutants_per_min</span> <span class="o">=</span> <span class="n">focus_mutants_per_min</span>
+
+                <span class="k">assert</span> <span class="p">(</span><span class="n">focus_mutants_per_max</span><span class="o">&gt;=</span><span class="n">focus_mutants_per</span><span class="p">)</span><span class="o">&amp;</span><span class="p">(</span><span class="n">focus_mutants_per_max</span><span class="o">&lt;=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">focus_positions</span><span class="p">)),</span> <span class="s1">&#39;focus_mutants_per_max must be a valid number&#39;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">focus_mutants_per_max</span> <span class="o">=</span> <span class="n">focus_mutants_per_max</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">num_focus</span><span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">focus_to_make</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">focus_made</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">create_focused_random_combinations</span><span class="p">())</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Invalid focus_to_make option&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1"> focused mutants made</span><span class="se">\n</span><span class="si">%f</span><span class="s1"> sec elapsed</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">focus_made</span><span class="p">,(</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">-</span><span class="n">start</span><span class="p">)</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()))</span>
+
+
+        
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Making nt seqs&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">total_seqs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generate_nt_seqs</span><span class="p">(</span><span class="n">aa_to_codon_dict</span><span class="o">=</span><span class="n">aa_to_codon_dict</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1"> nt seqs made</span><span class="se">\n</span><span class="si">%f</span><span class="s1"> sec elapsed</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">total_seqs</span><span class="p">,(</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">-</span><span class="n">start</span><span class="p">)</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()))</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">save_file</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;File saved</span><span class="se">\n</span><span class="si">%f</span><span class="s1"> sec elapsed&#39;</span><span class="o">%</span><span class="p">((</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">-</span><span class="n">start</span><span class="p">)</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;------------------------------------------------&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">()</span>
+        <span class="n">summarize_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_name</span><span class="p">,</span> <span class="n">out_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fig_path</span><span class="p">,</span> <span class="n">fig_width</span><span class="o">=</span><span class="n">fig_width</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Output checked</span><span class="se">\n</span><span class="si">%f</span><span class="s1"> sec elapsed&#39;</span><span class="o">%</span><span class="p">((</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">-</span><span class="n">start</span><span class="p">)</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()))</span></div>
+        
+<div class="viewcode-block" id="LibraryMaker.create_focused_singles"><a class="viewcode-back" href="../../DMS_designer.html#DMS_designer.library_maker.LibraryMaker.create_focused_singles">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">create_focused_singles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create all single amino acid mutants at focused positions.</span>
+<span class="sd">        </span>
+<span class="sd">        Generates every possible single amino acid substitution at each position</span>
+<span class="sd">        specified in focus_positions, excluding the wild-type amino acid.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Dictionary mapping variant names to protein sequences for focused</span>
+<span class="sd">            single mutants. Names follow pattern 1pt_PPAA where PP is the</span>
+<span class="sd">            position (01-indexed) and AA is the amino acid.</span>
+<span class="sd">            </span>
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Updates self.variant_dict with the new variants.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">focused_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">focus_positions</span><span class="p">:</span>
+            <span class="n">wt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wt_protein</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">aa</span> <span class="ow">in</span> <span class="n">amino_acids</span><span class="p">[(</span><span class="n">amino_acids</span><span class="o">!=</span><span class="n">wt</span><span class="p">)]:</span>
+                <span class="n">var_protein</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wt_protein</span><span class="p">[:</span><span class="n">pos</span><span class="p">]</span> <span class="o">+</span> <span class="n">aa</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">wt_protein</span><span class="p">[</span><span class="n">pos</span><span class="o">+</span><span class="mi">1</span><span class="p">:]</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;1pt_</span><span class="si">{</span><span class="n">pos</span><span class="o">+</span><span class="mi">1</span><span class="si">:</span><span class="s1">02d</span><span class="si">}{</span><span class="n">aa</span><span class="si">}</span><span class="s1">&#39;</span>
+                <span class="n">focused_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">var_protein</span>
+
+        <span class="c1"># Add to variant dictionary</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variant_dict</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">focused_dict</span><span class="p">)</span>
+        <span class="k">return</span><span class="p">(</span><span class="n">focused_dict</span><span class="p">)</span></div>
+    
+<div class="viewcode-block" id="LibraryMaker.create_focused_doubles"><a class="viewcode-back" href="../../DMS_designer.html#DMS_designer.library_maker.LibraryMaker.create_focused_doubles">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">create_focused_doubles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create all double amino acid mutants at focused positions.</span>
+<span class="sd">        </span>
+<span class="sd">        Generates every possible combination of two amino acid substitutions</span>
+<span class="sd">        at pairs of positions specified in focus_positions, excluding wild-type</span>
+<span class="sd">        amino acids and stop codons.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Dictionary mapping variant names to protein sequences for focused</span>
+<span class="sd">            double mutants. Names follow pattern 2pt_PP1AA1_PP2AA2 where PP</span>
+<span class="sd">            is the position (01-indexed) and AA is the amino acid.</span>
+<span class="sd">            </span>
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Updates self.variant_dict with the new variants.</span>
+<span class="sd">        Excludes stop codons (*) from possible substitutions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">focused_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">pos1</span><span class="p">,</span> <span class="n">pos2</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">focus_positions</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="n">wt1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wt_protein</span><span class="p">[</span><span class="n">pos1</span><span class="p">]</span>
+            <span class="n">wt2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wt_protein</span><span class="p">[</span><span class="n">pos2</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">aa1</span><span class="p">,</span> <span class="n">aa2</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="n">amino_acids</span><span class="p">[(</span><span class="n">amino_acids</span><span class="o">!=</span><span class="n">wt1</span><span class="p">)</span><span class="o">&amp;</span><span class="p">(</span><span class="n">amino_acids</span><span class="o">!=</span><span class="s1">&#39;*&#39;</span><span class="p">)],</span> <span class="n">amino_acids</span><span class="p">[(</span><span class="n">amino_acids</span><span class="o">!=</span><span class="n">wt2</span><span class="p">)</span><span class="o">&amp;</span><span class="p">(</span><span class="n">amino_acids</span><span class="o">!=</span><span class="s1">&#39;*&#39;</span><span class="p">)]):</span>
+                <span class="n">var_protein</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wt_protein</span><span class="p">[:</span><span class="n">pos1</span><span class="p">]</span> <span class="o">+</span> <span class="n">aa1</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">wt_protein</span><span class="p">[</span><span class="n">pos1</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span><span class="n">pos2</span><span class="p">]</span> <span class="o">+</span> <span class="n">aa2</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">wt_protein</span><span class="p">[</span><span class="n">pos2</span><span class="o">+</span><span class="mi">1</span><span class="p">:]</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;2pt_</span><span class="si">{</span><span class="n">pos1</span><span class="o">+</span><span class="mi">1</span><span class="si">:</span><span class="s1">02d</span><span class="si">}{</span><span class="n">aa1</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">pos2</span><span class="o">+</span><span class="mi">1</span><span class="si">:</span><span class="s1">02d</span><span class="si">}{</span><span class="n">aa2</span><span class="si">}</span><span class="s1">&#39;</span>
+                <span class="n">focused_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">var_protein</span>
+
+        <span class="c1"># Add to variant dictionary</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variant_dict</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">focused_dict</span><span class="p">)</span>
+        <span class="k">return</span><span class="p">(</span><span class="n">focused_dict</span><span class="p">)</span></div>
+    
+<div class="viewcode-block" id="LibraryMaker.create_focused_all_combinations"><a class="viewcode-back" href="../../DMS_designer.html#DMS_designer.library_maker.LibraryMaker.create_focused_all_combinations">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">create_focused_all_combinations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create all possible combinations of mutations at focused positions.</span>
+<span class="sd">        </span>
+<span class="sd">        Generates every possible combination of amino acid substitutions at the</span>
+<span class="sd">        focused positions, from single mutations up to mutations at all focused</span>
+<span class="sd">        positions simultaneously. Excludes wild-type amino acids and stop codons.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Dictionary mapping variant names to protein sequences for all focused</span>
+<span class="sd">            mutant combinations. Names follow pattern Npt_PP1AA1_PP2AA2_...</span>
+<span class="sd">            where N is the number of mutations, PP is position (01-indexed),</span>
+<span class="sd">            and AA is the amino acid.</span>
+<span class="sd">            </span>
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Updates self.variant_dict with the new variants.</span>
+<span class="sd">        Excludes stop codons (*) from possible substitutions.</span>
+<span class="sd">        Generates combinations of all sizes from 1 to len(focus_positions).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">focused_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">positions</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="o">.</span><span class="n">from_iterable</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">combinations</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">focus_positions</span><span class="p">,</span> <span class="n">r</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">focus_positions</span><span class="p">))):</span>
+            <span class="n">wts</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wt_protein</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="n">positions</span><span class="p">)</span>
+            <span class="n">aa_options</span> <span class="o">=</span> <span class="p">(</span><span class="n">amino_acids</span><span class="p">[(</span><span class="n">amino_acids</span><span class="o">!=</span><span class="n">wt</span><span class="p">)</span><span class="o">&amp;</span><span class="p">(</span><span class="n">amino_acids</span><span class="o">!=</span><span class="s1">&#39;*&#39;</span><span class="p">)]</span> <span class="k">for</span> <span class="n">wt</span> <span class="ow">in</span> <span class="n">wts</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">aas</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="n">aa_options</span><span class="p">):</span>
+                <span class="n">var_protein</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wt_protein</span><span class="p">[:</span><span class="n">positions</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">aas</span><span class="p">)</span><span class="si">}</span><span class="s1">pt_&#39;</span>
+                <span class="n">cur_poses</span><span class="p">,</span> <span class="n">next_poses</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">tee</span><span class="p">(</span><span class="n">positions</span><span class="p">)</span>
+                <span class="nb">next</span><span class="p">(</span><span class="n">next_poses</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">cur_pos</span><span class="p">,</span> <span class="n">next_pos</span><span class="p">,</span> <span class="n">aa</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">cur_poses</span><span class="p">,</span> <span class="n">next_poses</span><span class="p">,</span> <span class="n">aas</span><span class="p">):</span>
+                    <span class="n">var_protein</span> <span class="o">=</span> <span class="n">var_protein</span><span class="o">+</span><span class="n">aa</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">wt_protein</span><span class="p">[</span><span class="n">cur_pos</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span><span class="n">next_pos</span><span class="p">]</span>
+                    <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">+</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">cur_pos</span><span class="o">+</span><span class="mi">1</span><span class="si">:</span><span class="s1">02d</span><span class="si">}{</span><span class="n">aa</span><span class="si">}</span><span class="s1">_&#39;</span>
+                <span class="n">var_protein</span> <span class="o">=</span> <span class="n">var_protein</span><span class="o">+</span><span class="n">aas</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">wt_protein</span><span class="p">[</span><span class="n">positions</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">:]</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">+</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">positions</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="si">:</span><span class="s1">02d</span><span class="si">}{</span><span class="n">aas</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span>
+
+                <span class="n">focused_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">var_protein</span>
+
+        <span class="c1"># Add to variant dictionary</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variant_dict</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">focused_dict</span><span class="p">)</span>
+        <span class="k">return</span><span class="p">(</span><span class="n">focused_dict</span><span class="p">)</span></div>
+    
+<div class="viewcode-block" id="LibraryMaker.create_focused_random_combinations"><a class="viewcode-back" href="../../DMS_designer.html#DMS_designer.library_maker.LibraryMaker.create_focused_random_combinations">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">create_focused_random_combinations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create random combinations of mutations at focused positions.</span>
+<span class="sd">        </span>
+<span class="sd">        Generates random combinations of amino acid substitutions at focused</span>
+<span class="sd">        positions according to specified probability distributions and constraints.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Dictionary mapping variant names to protein sequences for random</span>
+<span class="sd">            focused mutant combinations. Names follow pattern Npt_PP1AA1_PP2AA2_...</span>
+<span class="sd">            where N is the number of mutations, PP is position (01-indexed),</span>
+<span class="sd">            and AA is the amino acid.</span>
+<span class="sd">            </span>
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Updates self.variant_dict with the new variants.</span>
+<span class="sd">        </span>
+<span class="sd">        The number of mutations per variant is controlled by:</span>
+<span class="sd">        - focus_mutants_per: Target average number of mutations</span>
+<span class="sd">        - focus_mutants_per_spread: Probability spread around the target</span>
+<span class="sd">        - focus_mutants_per_min: Minimum mutations per variant</span>
+<span class="sd">        - focus_mutants_per_max: Maximum mutations per variant</span>
+<span class="sd">        </span>
+<span class="sd">        If spread &gt; 0, probability decays arithmetically as you move away</span>
+<span class="sd">        from the target number of mutations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">low_num</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">focus_mutants_per</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">focus_mutants_per_min</span>
+        <span class="n">high_num</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">focus_mutants_per_max</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">focus_mutants_per</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">low_num</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span><span class="o">&amp;</span><span class="p">(</span><span class="n">high_num</span><span class="o">==</span><span class="mi">0</span><span class="p">):</span>
+            <span class="n">spread</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">low_num</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span><span class="o">|</span><span class="p">(</span><span class="n">high_num</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span><span class="o">&amp;</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">focus_mutants_per_spread</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Mean cannot be at one edge of a range if spread is greater than 0&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">spread</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">focus_mutants_per_spread</span>
+        
+        <span class="k">if</span> <span class="n">spread</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">low_num</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+                <span class="n">low_max</span> <span class="o">=</span> <span class="n">spread</span><span class="o">/</span><span class="n">low_num</span>
+                <span class="n">low_d</span> <span class="o">=</span> <span class="n">low_max</span><span class="o">/</span><span class="p">(</span><span class="n">low_num</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">low</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">)</span><span class="o">*</span><span class="n">low_d</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">low_num</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">low</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">high_num</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">high_max</span> <span class="o">=</span> <span class="n">spread</span><span class="o">/</span><span class="n">high_num</span>
+                <span class="n">high_d</span> <span class="o">=</span> <span class="n">high_max</span><span class="o">/</span><span class="p">(</span><span class="n">high_num</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">high</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">)</span><span class="o">*</span><span class="n">high_d</span>  <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">high_num</span><span class="o">+</span><span class="mi">1</span><span class="p">)][::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">high</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="n">ps</span> <span class="o">=</span>  <span class="n">low</span><span class="o">+</span> <span class="p">[</span><span class="mi">1</span><span class="o">-</span><span class="n">spread</span><span class="p">]</span><span class="o">+</span> <span class="n">high</span>
+            <span class="n">ps</span> <span class="o">=</span> <span class="n">ps</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">choices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">focus_mutants_per_min</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">focus_mutants_per_max</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ps</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">choices</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">focus_mutants_per</span><span class="p">]</span>
+        <span class="n">focused_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">var_num</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_focus</span><span class="p">):</span>
+            <span class="n">still_trying</span><span class="o">=</span><span class="kc">True</span>
+            <span class="n">tries</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">while</span> <span class="n">still_trying</span><span class="p">:</span>
+                <span class="n">tries</span> <span class="o">=</span> <span class="n">tries</span><span class="o">+</span><span class="mi">1</span>
+                <span class="n">mut_number</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">choices</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">ps</span><span class="p">)</span>
+                <span class="n">mut_positions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">focus_positions</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">mut_number</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="n">mut_positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">mut_positions</span><span class="p">)</span>
+                <span class="n">wts</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wt_protein</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="n">mut_positions</span><span class="p">)</span>
+                <span class="n">aas</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="n">amino_acids</span><span class="p">[(</span><span class="n">amino_acids</span><span class="o">!=</span><span class="n">wt</span><span class="p">)</span><span class="o">&amp;</span><span class="p">(</span><span class="n">amino_acids</span><span class="o">!=</span><span class="s1">&#39;*&#39;</span><span class="p">)])</span> <span class="k">for</span> <span class="n">wt</span> <span class="ow">in</span> <span class="n">wts</span><span class="p">]</span>
+
+                <span class="n">var_protein</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wt_protein</span><span class="p">[:</span><span class="n">mut_positions</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">aas</span><span class="p">)</span><span class="si">}</span><span class="s1">pt_&#39;</span>
+                <span class="n">cur_poses</span><span class="p">,</span> <span class="n">next_poses</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">tee</span><span class="p">(</span><span class="n">mut_positions</span><span class="p">)</span>
+                <span class="nb">next</span><span class="p">(</span><span class="n">next_poses</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">cur_pos</span><span class="p">,</span> <span class="n">next_pos</span><span class="p">,</span> <span class="n">aa</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">cur_poses</span><span class="p">,</span> <span class="n">next_poses</span><span class="p">,</span> <span class="n">aas</span><span class="p">):</span>
+                    <span class="n">var_protein</span> <span class="o">=</span> <span class="n">var_protein</span><span class="o">+</span><span class="n">aa</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">wt_protein</span><span class="p">[</span><span class="n">cur_pos</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span><span class="n">next_pos</span><span class="p">]</span>
+                    <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">+</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">cur_pos</span><span class="o">+</span><span class="mi">1</span><span class="si">:</span><span class="s1">02d</span><span class="si">}{</span><span class="n">aa</span><span class="si">}</span><span class="s1">_&#39;</span>
+                <span class="n">var_protein</span> <span class="o">=</span> <span class="n">var_protein</span><span class="o">+</span><span class="n">aas</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">wt_protein</span><span class="p">[</span><span class="n">mut_positions</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">:]</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">+</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">mut_positions</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="si">:</span><span class="s1">02d</span><span class="si">}{</span><span class="n">aas</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span>
+
+                <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">focused_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="n">focused_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">var_protein</span>
+                    <span class="n">still_trying</span><span class="o">=</span><span class="kc">False</span>
+                <span class="k">elif</span> <span class="n">tries</span><span class="o">&gt;=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_tries</span><span class="p">:</span>
+                    <span class="n">still_trying</span><span class="o">=</span><span class="kc">False</span>
+                
+        <span class="c1"># Add to variant dictionary</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variant_dict</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">focused_dict</span><span class="p">)</span>
+        <span class="k">return</span><span class="p">(</span><span class="n">focused_dict</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LibraryMaker.create_singles"><a class="viewcode-back" href="../../DMS_designer.html#DMS_designer.library_maker.LibraryMaker.create_singles">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">create_singles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create all possible single amino acid mutants.</span>
+<span class="sd">        </span>
+<span class="sd">        Generates every possible single amino acid substitution at each position</span>
+<span class="sd">        in the protein sequence, excluding the wild-type amino acid.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Dictionary mapping variant names to protein sequences for single</span>
+<span class="sd">            mutants. Names follow pattern 1pt_PPAA where PP is the position</span>
+<span class="sd">            (01-indexed) and AA is the amino acid.</span>
+<span class="sd">            </span>
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Updates self.variant_dict with the new variants.</span>
+<span class="sd">        Creates (L * 20) single mutants where L is the protein length.</span>
+<span class="sd">        The 20 includes the stop codons.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">single_variant_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">L</span><span class="p">):</span>
+            <span class="n">wt_aa</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wt_protein</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">aa</span> <span class="ow">in</span> <span class="n">amino_acids</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">aa</span><span class="o">!=</span><span class="n">wt_aa</span><span class="p">:</span>
+                    <span class="n">var_protein</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wt_protein</span><span class="p">[:</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">aa</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">wt_protein</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">:]</span>
+                    <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;1pt_</span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">:</span><span class="s2">02d</span><span class="si">}{</span><span class="n">aa</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="n">single_variant_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">var_protein</span>
+
+        <span class="c1"># Add to variant dictionary</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variant_dict</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">single_variant_dict</span><span class="p">)</span>
+        <span class="k">return</span><span class="p">(</span><span class="n">single_variant_dict</span><span class="p">)</span></div>
+    
+<div class="viewcode-block" id="LibraryMaker.create_doubles"><a class="viewcode-back" href="../../DMS_designer.html#DMS_designer.library_maker.LibraryMaker.create_doubles">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">create_doubles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create random double amino acid mutants.</span>
+<span class="sd">        </span>
+<span class="sd">        Generates random combinations of two amino acid substitutions at different</span>
+<span class="sd">        positions in the protein sequence. Uses a tracking matrix to avoid</span>
+<span class="sd">        generating duplicate combinations.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Dictionary mapping variant names to protein sequences for random</span>
+<span class="sd">            double mutants. Names follow pattern 2pt_PP1AA1_PP2AA2 where PP</span>
+<span class="sd">            is the position (01-indexed) and AA is the amino acid.</span>
+<span class="sd">            </span>
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Updates self.variant_dict with the new variants.</span>
+<span class="sd">        Uses self.already_seen matrix to track which combinations have been</span>
+<span class="sd">        generated to avoid duplicates.</span>
+<span class="sd">        Excludes stop codons (*) from possible substitutions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">already_seen</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">L</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">L</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">amino_acids</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">amino_acids</span><span class="p">)))</span>
+        <span class="n">double_variant_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_doubles</span><span class="p">):</span>
+            <span class="n">pair</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">L</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">pair</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+            <span class="n">i</span><span class="p">,</span><span class="n">j</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">pair</span><span class="p">)</span>
+
+            <span class="c1"># Chose aa for position i</span>
+            <span class="n">wt_aa_i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wt_protein</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">amino_acids</span><span class="o">!=</span><span class="n">wt_aa_i</span><span class="p">)</span><span class="o">&amp;</span><span class="p">(</span><span class="n">amino_acids</span><span class="o">!=</span><span class="s1">&#39;*&#39;</span><span class="p">)</span>
+            <span class="n">aa_i_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">amino_acids</span><span class="p">))[</span><span class="n">mask</span><span class="p">],</span><span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">aa_i</span> <span class="o">=</span> <span class="n">amino_acids</span><span class="p">[</span><span class="n">aa_i_idx</span><span class="p">]</span>
+            
+
+            <span class="c1"># Chose aa for position j</span>
+            <span class="n">wt_aa_j</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wt_protein</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">amino_acids</span><span class="o">!=</span><span class="n">wt_aa_j</span><span class="p">)</span><span class="o">&amp;</span><span class="p">(</span><span class="n">amino_acids</span><span class="o">!=</span><span class="s1">&#39;*&#39;</span><span class="p">)</span><span class="o">&amp;</span><span class="p">(</span><span class="n">already_seen</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span> <span class="n">aa_i_idx</span><span class="p">]</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">aa_j_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">amino_acids</span><span class="p">))[</span><span class="n">mask</span><span class="p">],</span><span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">aa_j</span> <span class="o">=</span> <span class="n">amino_acids</span><span class="p">[</span><span class="n">aa_j_idx</span><span class="p">]</span>
+            
+            <span class="n">already_seen</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span> <span class="n">aa_i_idx</span><span class="p">,</span> <span class="n">aa_j_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">already_seen</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span> <span class="n">aa_i_idx</span><span class="p">,</span> <span class="n">aa_j_idx</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span>
+
+            <span class="c1"># Create protein sequence</span>
+            <span class="n">var_protein</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wt_protein</span><span class="p">)</span>
+            <span class="n">var_protein</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">aa_i</span>
+            <span class="n">var_protein</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">aa_j</span>
+            <span class="n">var_protein</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">var_protein</span><span class="p">)</span>
+
+            <span class="c1"># Create name </span>
+            <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;2pt_</span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">:</span><span class="s1">02d</span><span class="si">}{</span><span class="n">aa_i</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="si">:</span><span class="s1">02d</span><span class="si">}{</span><span class="n">aa_j</span><span class="si">}</span><span class="s1">&#39;</span>
+
+            <span class="n">double_variant_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">var_protein</span>
+            
+        <span class="c1"># Add to variant dictionary</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variant_dict</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">double_variant_dict</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">already_seen</span> <span class="o">=</span> <span class="n">already_seen</span>
+        <span class="k">return</span><span class="p">(</span><span class="n">double_variant_dict</span><span class="p">)</span></div>
+    
+    
+<div class="viewcode-block" id="LibraryMaker.generate_nt_seqs"><a class="viewcode-back" href="../../DMS_designer.html#DMS_designer.library_maker.LibraryMaker.generate_nt_seqs">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">generate_nt_seqs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">aa_to_codon_dict</span><span class="o">=</span><span class="n">aa_to_codon_dict</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate synonymous nucleotide sequences for all protein variants.</span>
+<span class="sd">        </span>
+<span class="sd">        Creates multiple synonymous nucleotide sequences for each protein variant</span>
+<span class="sd">        using the codon usage table. The number of variants depends on whether</span>
+<span class="sd">        it&#39;s the wild-type (wt_num variants) or a mutant (var_num variants).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        aa_to_codon_dict : dict, optional</span>
+<span class="sd">            Dictionary mapping amino acids to their codons. If None, uses the default codon usage table.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Dictionary mapping variant names to nucleotide sequences.</span>
+<span class="sd">            Names follow pattern PROTEIN_NAME_vN where N is the variant number.</span>
+<span class="sd">            </span>
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Updates self.orf_dict with the nucleotide sequences.</span>
+<span class="sd">        </span>
+<span class="sd">        For wild-type variants, generates wt_num synonymous sequences.</span>
+<span class="sd">        For mutant variants, generates var_num synonymous sequences.</span>
+<span class="sd">        </span>
+<span class="sd">        The first wild-type variant uses the exact input nucleotide sequence.</span>
+<span class="sd">        Subsequent variants are generated by randomly selecting one of the two most common codons for each aa.</span>
+<span class="sd">        </span>
+<span class="sd">        Attempts up to max_tries times to generate unique sequences before</span>
+<span class="sd">        giving up on a particular variant.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">protein_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variant_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">protein_names</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">orf_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">protein_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">protein_names</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">i</span><span class="o">%</span><span class="mi">100</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">protein_name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+            <span class="c1"># Get protein sequence</span>
+            <span class="n">protein_seq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variant_dict</span><span class="p">[</span><span class="n">protein_name</span><span class="p">]</span>
+
+            <span class="c1"># Iterate over synonymous variants</span>
+            <span class="n">k</span><span class="o">=</span><span class="mi">0</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">if</span> <span class="n">protein_name</span> <span class="o">==</span> <span class="s1">&#39;0pt_WT&#39;</span><span class="p">:</span>
+                <span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wt_num</span>
+            <span class="k">elif</span> <span class="s1">&#39;*&#39;</span> <span class="ow">in</span> <span class="n">protein_name</span><span class="p">:</span>
+                <span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stop_num</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_num</span>
+            <span class="k">while</span> <span class="n">k</span> <span class="o">&lt;</span> <span class="n">K</span><span class="p">:</span>
+
+                <span class="c1"># Draw coding sequence</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">protein_name</span> <span class="o">==</span> <span class="s1">&#39;0pt_WT&#39;</span><span class="p">)</span><span class="o">&amp;</span><span class="p">(</span><span class="n">k</span><span class="o">==</span><span class="mi">0</span><span class="p">):</span>
+                    <span class="n">orf_seq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wt_nt</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">orf_seq</span> <span class="o">=</span> <span class="n">protein_to_orf</span><span class="p">(</span><span class="n">protein_seq</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="n">aa_to_codon_dict</span><span class="o">=</span><span class="n">aa_to_codon_dict</span><span class="p">)</span>
+
+                <span class="c1"># Add if not already in dictionary</span>
+                <span class="k">if</span> <span class="n">orf_seq</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">orf_dict</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                    <span class="n">key</span> <span class="o">=</span> <span class="n">protein_name</span><span class="o">+</span><span class="sa">f</span><span class="s1">&#39;_v</span><span class="si">{</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s1">&#39;</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">orf_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">orf_seq</span>
+                    <span class="n">k</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">t</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_tries</span><span class="p">:</span>
+                        <span class="k">break</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">t</span> <span class="o">=</span> <span class="n">t</span><span class="o">+</span><span class="mi">1</span>
+        <span class="k">return</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">orf_dict</span><span class="p">)</span></div>
+    
+<div class="viewcode-block" id="LibraryMaker.save_file"><a class="viewcode-back" href="../../DMS_designer.html#DMS_designer.library_maker.LibraryMaker.save_file">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">save_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Save the library to a CSV file and generate oligonucleotide sequences.</span>
+<span class="sd">        </span>
+<span class="sd">        Creates a pandas DataFrame with all library variants and saves it to</span>
+<span class="sd">        a CSV file. The DataFrame includes protein sequences, nucleotide</span>
+<span class="sd">        sequences, and full oligonucleotide sequences with adapters.</span>
+<span class="sd">        </span>
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Updates self.orf_df with the final library DataFrame.</span>
+<span class="sd">        Updates self.file_name with the saved file path.</span>
+<span class="sd">        </span>
+<span class="sd">        The CSV file contains columns:</span>
+<span class="sd">        - name: Variant identifier</span>
+<span class="sd">        - protein: Amino acid sequence</span>
+<span class="sd">        - orf: Nucleotide sequence (without adapters)</span>
+<span class="sd">        - oligo: Full oligonucleotide sequence (with adapters)</span>
+<span class="sd">        </span>
+<span class="sd">        File naming convention:</span>
+<span class="sd">        {name}_orf_library_N={total_variants}_time={timestamp}.csv</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Save variants to dataframe</span>
+        <span class="n">orf_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+        <span class="n">keys</span><span class="p">,</span> <span class="n">values</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">orf_dict</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+        <span class="n">orf_df</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">keys</span>
+        <span class="n">orf_df</span><span class="p">[</span><span class="s1">&#39;protein&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">orf_to_protein</span><span class="p">(</span><span class="n">orf</span><span class="p">)</span> <span class="k">for</span> <span class="n">orf</span> <span class="ow">in</span> <span class="n">values</span><span class="p">]</span>
+        <span class="n">orf_df</span><span class="p">[</span><span class="s1">&#39;orf&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span>
+        <span class="n">orf_df</span><span class="p">[</span><span class="s1">&#39;oligo&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">upstream_dna</span> <span class="o">+</span> <span class="n">dna</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">downstream_dna</span> <span class="k">for</span> <span class="n">dna</span> <span class="ow">in</span> <span class="n">values</span><span class="p">]</span>
+        <span class="n">orf_df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;index&#39;</span>
+        <span class="n">orf_df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">file_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">_orf_library_N=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">orf_df</span><span class="p">)</span><span class="si">}</span><span class="s1">_time=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">date_time</span><span class="si">}</span><span class="s1">.csv&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">file_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_path</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">file_name</span>
+        <span class="n">orf_df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_name</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">orf_df</span> <span class="o">=</span> <span class="n">orf_df</span></div></div>
+    
+
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../DMS_designer.html#DMS_designer.library_maker.main">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Main function for command-line interface.</span>
+<span class="sd">    </span>
+<span class="sd">    This function provides the command-line interface for creating mutagenesis</span>
+<span class="sd">    libraries. It can be used to generate libraries from either nucleotide</span>
+<span class="sd">    or amino acid sequences.</span>
+<span class="sd">    </span>
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    # Create library from nucleotide sequence</span>
+<span class="sd">    dms-maker -w ATGGCCGAA -s True -d equal -l even_single_and_double_nt_library</span>
+<span class="sd">    </span>
+<span class="sd">    # Create library from amino acid sequence  </span>
+<span class="sd">    dms-maker -w MKEL -a -s True -d 100 -l even_single_and_double_aa_library</span>
+<span class="sd">    </span>
+<span class="sd">    # Create library with custom parameters</span>
+<span class="sd">    dms-maker -w ATGGCCGAA -s True -d max:10000 -n 5 -t 50 -l single_and_more_doubles_nt_library</span>
+
+<span class="sd">    # Create library with focused mutations</span>
+<span class="sd">    dms-maker -w ATGGCCGAA -s True -d max:10000 -f 1 3 5 -c singles -p 3 -e 0.5 -l single_and_more_doubles_with_all_focused_mutations_nt_library</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">argparse</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArgumentParser</span>
+    <span class="n">desc</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    Generate oligonucleotide libraries for protein mutagenesis studies.</span>
+<span class="s2">    </span>
+<span class="s2">    This script creates comprehensive mutagenesis libraries including single and</span>
+<span class="s2">    multiple amino acid mutants, synonymous nucleotide variants, and focused</span>
+<span class="s2">    mutagenesis. The output is a CSV file containing all variants with their</span>
+<span class="s2">    protein sequences, nucleotide sequences, and full oligonucleotide sequences</span>
+<span class="s2">    ready for synthesis.</span>
+<span class="s2">    </span>
+<span class="s2">    The library can be generated from either a nucleotide sequence (default)</span>
+<span class="s2">    or an amino acid sequence (use -a flag). The script automatically handles</span>
+<span class="s2">    codon usage optimization and generates multiple synonymous variants for</span>
+<span class="s2">    each protein variant.</span>
+<span class="s2">    &quot;&quot;&quot;</span>
+    
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">(</span>
+                        <span class="n">prog</span><span class="o">=</span><span class="s1">&#39;dms-maker&#39;</span><span class="p">,</span>
+                        <span class="n">description</span><span class="o">=</span><span class="n">desc</span><span class="p">,</span>
+                        <span class="n">epilog</span><span class="o">=</span><span class="s1">&#39;For more information, see the LibraryMaker class documentation.&#39;</span><span class="p">)</span>
+
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-w&#39;</span><span class="p">,</span><span class="s1">&#39;--wt&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                       <span class="n">help</span><span class="o">=</span><span class="s1">&#39;The nucleotide or amino acid sequence to mutagenize&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-a&#39;</span><span class="p">,</span><span class="s1">&#39;--is-aa&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>
+                       <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Indicate that the input sequence is an amino acid sequence (default: nucleotide)&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-s&#39;</span><span class="p">,</span><span class="s1">&#39;--single-mutants&#39;</span><span class="p">,</span><span class="nb">type</span><span class="o">=</span><span class="nb">bool</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                       <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Include single mutants in the library (default: True)&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-d&#39;</span><span class="p">,</span><span class="s1">&#39;--doubles-to-make&#39;</span><span class="p">,</span><span class="n">default</span><span class="o">=</span><span class="s1">&#39;equal&#39;</span><span class="p">,</span>
+                       <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Number of double mutants to generate. Options: &quot;equal&quot; (same as singles), &quot;max:N&quot; (up to N total oligos), float (fraction of singles), or int (exact number)&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-n&#39;</span><span class="p">,</span><span class="s1">&#39;--var-num&#39;</span><span class="p">,</span><span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                       <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Number of synonymous nucleotide variants per mutant (default: 3)&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-t&#39;</span><span class="p">,</span><span class="s1">&#39;--wt-num&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                       <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Number of synonymous nucleotide variants for wild-type (default: 100)&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-j&#39;</span><span class="p">,</span><span class="s1">&#39;--max_tries&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                       <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Maximum attempts to generate unique variants before giving up (default: 100)&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-u&#39;</span><span class="p">,</span> <span class="s1">&#39;--upstream_dna&#39;</span><span class="p">,</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;ATGGAAAGTGTCCCAGGAGACTACAGC&#39;</span><span class="p">,</span>
+                       <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Upstream adapter sequence (default: ATGGAAAGTGTCCCAGGAGACTACAGC)&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-r&#39;</span><span class="p">,</span> <span class="s1">&#39;--downstream_dna&#39;</span><span class="p">,</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;CAGACAAGTAACTCAAGACTTAATGGC&#39;</span><span class="p">,</span>
+                       <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Downstream adapter sequence (default: CAGACAAGTAACTCAAGACTTAATGGC)&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-o&#39;</span><span class="p">,</span><span class="s1">&#39;--out_path&#39;</span><span class="p">,</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">,</span>
+                       <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Output directory for library files (default: current directory)&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-f&#39;</span><span class="p">,</span><span class="s1">&#39;--focus_positions&#39;</span><span class="p">,</span><span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="p">[],</span>
+                       <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Amino acid positions to focus on for mutagenesis (e.g., &quot;1 3 5&quot;)&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-c&#39;</span><span class="p">,</span><span class="s1">&#39;--focus_to_make&#39;</span><span class="p">,</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;singles&#39;</span><span class="p">,</span>
+                       <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Type of focused mutations to generate. Options: &quot;singles&quot;, &quot;doubles&quot;, &quot;singles_doubles&quot;, &quot;all&quot;&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-p&#39;</span><span class="p">,</span><span class="s1">&#39;--focus_mutants_per&#39;</span><span class="p">,</span><span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                       <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Number of focused mutations per variant (default: 3)&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-e&#39;</span><span class="p">,</span><span class="s1">&#39;--focus_mutants_per_spread&#39;</span><span class="p">,</span><span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                       <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Spread of focused mutations per variant (default: 0)&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-i&#39;</span><span class="p">,</span><span class="s1">&#39;--focus_mutants_per_min&#39;</span><span class="p">,</span><span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                       <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Minimum number of focused mutations per variant (default: 0)&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-x&#39;</span><span class="p">,</span><span class="s1">&#39;--focus_mutants_per_max&#39;</span><span class="p">,</span><span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                       <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Maximum number of focused mutations per variant (default: 0)&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-v&#39;</span><span class="p">,</span><span class="s1">&#39;--seed&#39;</span><span class="p">,</span><span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                       <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Random seed for reproducibility (default: None)&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-g&#39;</span><span class="p">,</span><span class="s1">&#39;--fig_width&#39;</span><span class="p">,</span><span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+                       <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Width of output figures (default: 8)&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-k&#39;</span><span class="p">,</span><span class="s1">&#39;--context&#39;</span><span class="p">,</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;talk&#39;</span><span class="p">,</span>
+                       <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Seaborn context for output figures (default: talk)&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-l&#39;</span><span class="p">,</span><span class="s1">&#39;--name&#39;</span><span class="p">,</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;Mutant_lib&#39;</span><span class="p">,</span>
+                       <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Name of the library (default: Mutant_lib)&#39;</span><span class="p">)</span>
+    
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">is_aa</span><span class="p">:</span>
+        <span class="n">wt_nt</span> <span class="o">=</span> <span class="n">protein_to_orf</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">wt</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">wt_nt</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">wt</span>
+        
+    <span class="n">LibraryMaker</span><span class="p">(</span><span class="n">wt_nt</span><span class="p">,</span> 
+                 <span class="n">single_mutants</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">single_mutants</span><span class="p">,</span> 
+                 <span class="n">doubles_to_make</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">doubles_to_make</span><span class="p">,</span> 
+                 <span class="n">name</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                 <span class="n">var_num</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">var_num</span><span class="p">,</span>
+                 <span class="n">wt_num</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">wt_num</span><span class="p">,</span> 
+                 <span class="n">max_tries</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">max_tries</span><span class="p">,</span>
+                 <span class="n">focus_positions</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">focus_positions</span><span class="p">,</span> 
+                 <span class="n">focus_to_make</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">focus_to_make</span><span class="p">,</span> 
+                 <span class="n">focus_mutants_per</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">focus_mutants_per</span><span class="p">,</span> 
+                 <span class="n">focus_mutants_per_spread</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">focus_mutants_per_spread</span><span class="p">,</span>
+                 <span class="n">focus_mutants_per_min</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">focus_mutants_per_min</span><span class="p">,</span>
+                 <span class="n">focus_mutants_per_max</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">focus_mutants_per_max</span><span class="p">,</span>
+                 <span class="n">upstream_dna</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">upstream_dna</span><span class="p">,</span>
+                 <span class="n">downstream_dna</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">downstream_dna</span><span class="p">,</span>
+                 <span class="n">out_path</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">out_path</span><span class="p">,</span> 
+                 <span class="n">seed</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span>
+                 <span class="n">fig_width</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">fig_width</span><span class="p">,</span> 
+                 <span class="n">context</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">context</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+    
+        
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, John J Desmarais.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
