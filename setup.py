@@ -73,6 +73,8 @@ setup(
         "openpyxl>=3.0.0",
         "tqdm>=4.60.0",
         "biopython>=1.79.0",
+        "mavenn",
+        "statsmodels",
     ],
     extras_require={
         "docs": [
